@@ -21,10 +21,10 @@ def solV_t(x,y,t):
 
 
 def Ux_t(x,y,t):
-    return 1.0 #3.0*np.sin(2.0*x)*np.cos(3.0*y) #np.sin(2.0*x)*np.exp(-10*t)
+    return 3.0*np.sin(2.0*x)*np.cos(3.0*y) #np.sin(2.0*x)*np.exp(-10*t)
 
 def Uy_t(x,y,t):
-    return 1.0 #2.0*np.cos(2.0*x)*np.sin(3.0*y) #np.sin(2.0*x)*np.exp(-10*t)
+    return 2.0*np.cos(2.0*x)*np.sin(3.0*y) #np.sin(2.0*x)*np.exp(-10*t)
 
 
 def deriv_x(Nnod,Vhat):
@@ -162,7 +162,7 @@ def adv_FE(Nnod,fhat,vhat,adv_velx_hat,adv_vely_hat,diffusivity,dt):
     bb = 0.5
     identity = np.ones((Nnod,Nnod))
     operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-    operator_force = dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
+    operator_force = -dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
     operator_adv = -dt*(kx[:]*adv_velx_hat[:]+ky[:]*adv_vely_hat[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
     
     solution = operator_diff * vhat + operator_force * fhat + 1.0*operator_adv
@@ -200,7 +200,7 @@ def adv_AB(Nnod,fhat,fhat_old,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv
     bb = 0.5
     identity = np.ones((Nnod,Nnod))
     operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-    operator_force = dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
+    operator_force = -dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
     operator_adv = -dt*(kx[:]*adv_velx_hat[:]+ky[:]*adv_vely_hat[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
     operator_adv_old = -dt*(kx[:]*adv_velx_hatold[:]+ky[:]*adv_vely_hatold[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
     
