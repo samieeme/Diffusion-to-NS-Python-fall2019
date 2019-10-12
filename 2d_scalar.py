@@ -12,7 +12,7 @@ import numpy as np
 
 from functions_diff_2D import solV, forcef,  diff_eq, diff_x, adv_FE, adv_AB, solV_t, forcef_t, diff_FE, diff_AB,Ux_t,Uy_t
 
-Nnod = 10
+Nnod = 12
 meshX = np.linspace(0,2*np.pi,Nnod+1)
 meshX = np.delete(meshX,Nnod,None)
 
@@ -22,7 +22,7 @@ Uy = np.zeros([Nnod,Nnod])
 f = np.zeros([Nnod,Nnod])
 
 
-alpha_t =0.1
+alpha_t = 0.5
 err = np.zeros([5])
 
 for kt in range(5):
@@ -55,8 +55,11 @@ for kt in range(5):
     #Vhat_new=diff_FE(Nnod,fhat,Vhat,alpha_t,dt)
     Vhat_new = adv_FE(Nnod,fhat,Vhat,adv_velx_hat,adv_vely_hat,alpha_t,dt)
     Vhat=Vhat_new[:]
+    V = np.real(np.fft.ifft2(Vhat))
+    adv_velx = Ux[:] * V[:]
+    adv_vely = Uy[:] * V[:]
     
-    for j in range(2,jmax):
+    for j in range(2,jmax):     
         fhat_old = fhat[:]
         for k1 in range(Nnod):
             for k2 in range(Nnod):
@@ -64,13 +67,14 @@ for kt in range(5):
         fhat = np.fft.fft2(f)
         adv_velx_hat = np.fft.fft2(adv_velx)
         adv_vely_hat = np.fft.fft2(adv_vely)
-        adv_velx_hatold = adv_velx_hat[:]
-        adv_vely_hatold = adv_vely_hat[:]
+#        adv_velx_hatold = adv_velx_hat[:]
+#        adv_vely_hatold = adv_vely_hat[:]
        # Vhat_new=diff_AB(Nnod,fhat,fhat_old,Vhat,Vhat_old,alpha_t,dt)
         #Vhat_new=adv_FE(Nnod,fhat,Vhat,adv_velx_hat,adv_vely_hat,alpha_t,dt)
         Vhat_new=adv_AB(Nnod,fhat,fhat_old,Vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,alpha_t,dt)
         Vhat_old = Vhat[:]
         Vhat=Vhat_new[:]
+        
         V = np.real(np.fft.ifft2(Vhat))
         adv_velx = Ux[:] * V[:]
         adv_vely = Uy[:] * V[:]
@@ -78,7 +82,7 @@ for kt in range(5):
         adv_vely_hatold = adv_vely_hat[:]
 
         
-    V_new = np.real(np.fft.ifft2(Vhat_new))
+    V_new = np.real(np.fft.ifft2(Vhat))
     for i in range(Nnod):
         for j in range(Nnod):
             V[i,j] = solV_t(meshX[i],meshX[j],(jmax-1)*dt)
@@ -98,4 +102,4 @@ rate_conver = (np.log(err[4])-np.log(err[0]))/(np.log(dt2)-np.log(dt1))
 
 #%%
 
-
+print(solV_t(1,1,0))
