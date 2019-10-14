@@ -8,23 +8,26 @@ Created on Tue Oct  8 10:57:08 2019
 import numpy as np
 def forcef(x,y):
     return -4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y)
-def forcef_t(x,y,t,alpha):
- ##  return 0*2.0*np.cos(2.0*x)*np.cos(3.0*y)-0*3.0*np.sin(2.0*x)*np.sin(3.0*y)-alpha*(-4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y))
+def forcef_t(x,y,t,alpha,nu):
     po = 3.0  
-    return np.sin(2.0*x)*np.cos(3.0*y)*(po)*t**(po-1)-alpha*(t**(po))*(-4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y))-Ux_t(x,y,t)*2.0*np.cos(2.0*x)*np.cos(3.0*y)*t**(po)+Uy_t(x,y,t)*3.0*np.sin(2.0*x)*np.sin(3.0*y)*t**(po)
-   ##return 0.0*np.sin(2.0*x)*np.cos(3.0*y)*2.5*t**(1.5)-alpha*(-4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y))+Ux_t(x,y,t)*2.0*np.cos(2.0*x)*np.cos(3.0*y)-Uy_t(x,y,t)*3.0*np.sin(2.0*x)*np.sin(3.0*y)
+    return np.sin(2.0*x)*np.cos(3.0*y)*(po)*t**(po-1)-alpha*(t**(po))*(-4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y))-Ux_t(x,y,t,nu)*2.0*np.cos(2.0*x)*np.cos(3.0*y)*t**(po)+Uy_t(x,y,t,nu)*3.0*np.sin(2.0*x)*np.sin(3.0*y)*t**(po)
+
+
 def solV(x,y):
     return np.sin(2.0*x)*np.cos(3.0*y)
-def solV_t(x,y,t):
-   ##return np.sin(2.0*x)*np.cos(3.0*y)
-##    return np.sin(2.0*x)*np.cos(3.0*y)*np.exp(-2*t)
+def phi_t(x,y,t):
+#    return np.sin(2.0*x)*np.cos(3.0*y)*np.exp(-2*t)
     return np.sin(2.0*x)*np.cos(3.0*y)*t**(3.0) #np.sin(2.0*x)*np.exp(-10*t)
+ #   return np.sin(2.0*x)*np.cos(3.0*y)
 
-def Ux_t(x,y,t):
-    return np.cos(3.0*y)+1.0*np.sin(1.0*x)*np.cos(1.0*y) #np.sin(2.0*x)*np.exp(-10*t)
 
-def Uy_t(x,y,t):
-    return np.cos(2.0*x)-1.0*np.cos(1.0*x)*np.sin(1.0*y) #np.sin(2.0*x)*np.exp(-10*t)
+def Ux_t(x,y,t,nu):
+    return -np.cos(1.0*x)*np.sin(1.0*y)*np.exp(-2.0*t)#(1.0+2.0*nu*t) #np.sin(2.0*x)*np.exp(-10*t)
+def Uy_t(x,y,t,nu):
+    return np.sin(1.0*x)*np.cos(1.0*y)*np.exp(-2.0*t)#(1.0+2.0*nu*t) #np.sin(2.0*x)*np.exp(-10*t)
+def press_t(x,y,t,nu):
+    return -1.0/4.0*(np.cos(2.0*x)+np.cos(2.0*y))*np.exp(-4.0*t)#(1.0+2.0*nu*t)**2.0
+
 
 
 def deriv_x(Nnod,Vhat):
@@ -206,6 +209,70 @@ def adv_AB(Nnod,fhat,fhat_old,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv
     
     solution = operator_diff * vhat + 3.0/2.0*operator_force * fhat - 1.0/2.0*operator_force * fhat_old + 3.0/2.0*operator_adv - 1.0/2.0*operator_adv_old
     return solution 
+    
+    
+def diff_cont(Nnod,uhat,vhat):
+    divhat = np.zeros((Nnod,Nnod))
+    kxx = np.zeros((Nnod,Nnod))
+    kyy = np.zeros((Nnod,Nnod))
+   # kx[0,0]=1.0/10000000.0
+    for i1 in range(Nnod):
+        if i1 <= (Nnod-1)/2:
+            kxx[i1,:] = i1
+        else:
+            kxx[i1,:] = (i1-Nnod)
+    for i2 in range(Nnod):
+        if i2 <= (Nnod-1)/2:
+            kyy[:,i2] = i2
+        else:
+            kyy[:,i2] = (i2-Nnod)
+    kx = np.zeros((Nnod,Nnod),dtype=complex)
+    for i1 in range(Nnod):
+        if i1 <= (Nnod-1)/2:
+           kx[i1,:] = complex(0,i1)
+        else:
+           kx[i1,:] = complex(0,i1-Nnod)   
+    ky = np.zeros((Nnod,Nnod),dtype=complex)
+    for i2 in range(Nnod):
+        if i2 <= (Nnod-1)/2:
+           ky[:,i2] = complex(0,i2)
+        else:
+           ky[:,i2] = complex(0,i2-Nnod)    
+           
+    alpha = 1;
+    frac_L = (kxx[:]**2+kyy[:]**2)**(alpha)
+    frac_L[0,0]=1.0
+    frac_R=1.0/frac_L
+    fhat = kx * uhat + ky * vhat
+    
+    divhat = frac_R * fhat
+   # diverz_V = np.real(np.fft.ifft2(divhat))
+    divhat[0,0] = 0.0
+    return divhat
+    
+def corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt):
+    kx = np.zeros((Nnod,Nnod),dtype=complex)
+    for i1 in range(Nnod):
+        if i1 <= (Nnod-1)/2:
+           kx[i1,:] = complex(0,i1)
+        else:
+           kx[i1,:] = complex(0,i1-Nnod)   
+    ky = np.zeros((Nnod,Nnod),dtype=complex)
+    for i2 in range(Nnod):
+        if i2 <= (Nnod-1)/2:
+           ky[:,i2] = complex(0,i2)
+        else:
+           ky[:,i2] = complex(0,i2-Nnod)     
+    
+    uhatnew = Uhat_tilde[:] -  (-1.0*kx[:]) * phat[:]
+    vhatnew = Vhat_tilde[:] -  (-1.0*ky[:]) * phat[:]
+    
+    return uhatnew, vhatnew
+    
+    
+    
+    
+    
     
     
     

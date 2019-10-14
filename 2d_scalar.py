@@ -12,7 +12,7 @@ import numpy as np
 
 from functions_diff_2D import solV, forcef,  diff_eq, diff_x, adv_FE, adv_AB, solV_t, forcef_t, diff_FE, diff_AB,Ux_t,Uy_t
 
-Nnod = 12
+Nnod = 10
 meshX = np.linspace(0,2*np.pi,Nnod+1)
 meshX = np.delete(meshX,Nnod,None)
 
@@ -22,12 +22,12 @@ Uy = np.zeros([Nnod,Nnod])
 f = np.zeros([Nnod,Nnod])
 
 
-alpha_t = 0.5
+alpha_t = 0.01
 err = np.zeros([5])
 
 for kt in range(5):
 
-    dt = 0.001/5.0**(kt)
+    dt = 0.01/2.0**(kt)
     
     for i in range(Nnod):
         for j in range(Nnod):
@@ -42,7 +42,7 @@ for kt in range(5):
     
     Vhat = np.fft.fft2(V)
     Vhat_old = Vhat[:]
-    jmax = 5000
+    jmax = 300*2**kt
     
     for k1 in range(Nnod):
         for k2 in range(Nnod):
@@ -91,15 +91,11 @@ for kt in range(5):
     #vs = diff_eq(Nnod,fhat)
     #dxV = diff_x(Nnod,Vhat)
     
-    err[kt] = abs(np.max(V_new[:] - V[:]))
-
-
-
-dt1 = 0.01
-dt2 = 0.01/5.0**5.
-rate_conver = (np.log(err[4])-np.log(err[0]))/(np.log(dt2)-np.log(dt1))
-
+   # err[kt] = abs(np.max(V_new[:] - V[:])) linalg
+    err[kt] = np.linalg.norm(V_new[:] - V[:],2)
 
 #%%
+dt1 = 0.001
+dt2 = 0.001/2.0**3.
+rate_conver = (np.log(err[3])-np.log(err[0]))/(np.log(dt2)-np.log(dt1))
 
-print(solV_t(1,1,0))
