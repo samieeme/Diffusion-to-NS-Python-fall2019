@@ -23,7 +23,7 @@ def deriv_x(Nnod,Vhat):
         else:
            kx[i1,:] = complex(0,i1-Nnod)  
            
-    divhat = kx * Vhat
+    divhat = - kx * Vhat
     diver_V = np.real(np.fft.ifftn(divhat))
     diver_V = diver_V.reshape(Nnod,Nnod)
     return diver_V
@@ -39,7 +39,7 @@ def deriv_y(Nnod,Vhat):
         else: 
            ky[:,i1] = complex(0,i1-Nnod) 
     
-    divhat = ky * Vhat
+    divhat = - ky * Vhat
     diver_V = np.real(np.fft.ifftn(divhat))
     diver_V = diver_V.reshape(Nnod,Nnod)
     return diver_V
@@ -57,8 +57,8 @@ def get_vorticity(Nnod,V1hat,V2hat):
            kx[i1,:] = complex(0,i1-Nnod)  
            ky[:,i1] = complex(0,i1-Nnod) 
     
-    divhat_x = kx * V2hat
-    divhat_y = ky * V1hat
+    divhat_x = - kx * V2hat
+    divhat_y = - ky * V1hat
     diverx_V = np.real(np.fft.ifftn(divhat_y-divhat_x))
     diverx_V = diverx_V.reshape(Nnod,Nnod)
     return diverx_V

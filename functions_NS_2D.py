@@ -269,8 +269,26 @@ def corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt):
     
     return uhatnew, vhatnew
     
+
+def dealiasing(cut_off, Nnod):
     
+    Nhalf=int(Nnod/2)
+    cf=int(np.round(cut_off*Nnod/2.))
+    w = np.ones((Nhalf+1,1))
+    cut = np.zeros((Nhalf-cf,1))
     
+    w[cf+1::]=cut
+    w_fliped=np.flip(w[1::])
+    
+    w=np.append(w,w_fliped)
+    
+    cutoff = np.zeros((Nnod,Nnod))
+    
+    for i2 in range(0,Nnod):
+        for i1 in range(0,Nnod):
+            cutoff[i1,i2] = w[i1]*w[i2]
+                
+    return cutoff    
     
     
     

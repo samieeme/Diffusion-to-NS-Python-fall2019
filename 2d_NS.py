@@ -9,7 +9,7 @@ import numpy as np
 #from functions import remain, deriv_x, deriv_y, deriv_z, div, Reduce_period, optimum_prnt
 #from Outputs import Output_Corr
 
-from functions_NS_2D import solV, forcef,  diff_eq, diff_x, adv_FE, adv_AB, phi_t, forcef_t, diff_FE, diff_AB,Ux_t,Uy_t,  diff_cont, corrector
+from functions_NS_2D import solV, forcef,  diff_eq, diff_x, adv_FE, adv_AB, phi_t, forcef_t, diff_FE, diff_AB,Ux_t,Uy_t,  diff_cont, corrector, dealiasing
 
 Nnod = 15
 meshX = np.linspace(0,2*np.pi,Nnod+1)
@@ -28,6 +28,11 @@ fs = np.zeros([Nnod,Nnod])
 visc = 1.0 
 schm = 1.0
 err = np.zeros([5]) 
+
+#Computing the cut-off frequency matrix for dealiasing
+cut_off = 0.3
+c_off=dealiasing(cut_off,Nnod)
+
 
 for kt in range(5): 
     
@@ -107,12 +112,12 @@ for kt in range(5):
             for k2 in range(Nnod):
                 fs[k1,k2] = forcef_t(meshX[k1],meshX[k2],(j-1)*dt,schm,visc)    
         fshat = np.fft.fft2(fs)
-        adv_velxx_hat = np.fft.fft2(adv_velxx)
-        adv_velxy_hat = np.fft.fft2(adv_velxy)
-        adv_velyy_hat = np.fft.fft2(adv_velyy)
+        adv_velxx_hat = (np.fft.fft2(adv_velxx)) * c_off
+        adv_velxy_hat = (np.fft.fft2(adv_velxy)) * c_off
+        adv_velyy_hat = (np.fft.fft2(adv_velyy)) * c_off
         
-        adv_phix_hat = np.fft.fft2(adv_phix)
-        adv_phiy_hat = np.fft.fft2(adv_phiy)        
+        adv_phix_hat = (np.fft.fft2(adv_phix)) * c_off
+        adv_phiy_hat = (np.fft.fft2(adv_phiy)) * c_off        
        # Vhat_new=diff_AB(Nnod,fhat,fhat_old,Vhat,Vhat_old,alpha_t,dt)
         #Vhat_new=adv_FE(Nnod,fhat,Vhat,adv_velx_hat,adv_vely_hat,alpha_t,dt)
         Uhat_tilde=adv_AB(Nnod,fhat,fhat_old,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,adv_velxy_hatold,visc,dt)
@@ -163,3 +168,4 @@ for kt in range(5):
 dt1 = 0.001
 dt2 = 0.001/3.0**3.
 rate_conver = (np.log(err[3])-np.log(err[0]))/(np.log(dt2)-np.log(dt1))
+print(rate_conver)
