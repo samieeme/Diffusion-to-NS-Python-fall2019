@@ -29,15 +29,19 @@ visc = 1.0
 schm = 1.0
 err = np.zeros([5]) 
 
-for kt in range(5): 
-    
-    dt = 0.01/3.0**(kt)     
-    for i in range(Nnod): 
-        for j in range(Nnod): 
-            phi[i,j] = phi_t(meshX[i],meshX[j],(1-1)*dt) 
-            U[i,j] = Ux_t(meshX[i],meshX[j],(1-1)*dt,visc) 
-            V[i,j] = Uy_t(meshX[i],meshX[j],(1-1)*dt,visc) 
-    #        f[i,j] = forcef(meshX[i],meshX[j])
+#for convergence test
+#for kt in range(5): 
+
+
+# InitC
+kt=1    
+dt = 0.01/3.0**(kt)     
+for i in range(Nnod): 
+    for j in range(Nnod): 
+        phi[i,j] = phi_t(meshX[i],meshX[j],(1-1)*dt) 
+        U[i,j] = Ux_t(meshX[i],meshX[j],(1-1)*dt,visc) 
+        V[i,j] = Uy_t(meshX[i],meshX[j],(1-1)*dt,visc) 
+#        f[i,j] = forcef(meshX[i],meshX[j])
     
     adv_velxx = U[:] * U[:] 
     adv_velxy = U[:] * V[:] 
@@ -52,7 +56,7 @@ for kt in range(5):
     Uhat_old = Uhat[:]    
     phihat = np.fft.fft2(phi) 
     phihat_old = phihat[:]    
-    jmax = 30*3**kt           
+    jmax = 30*3**kt   #time-steps number        
     
     for k1 in range(Nnod):
         for k2 in range(Nnod):
