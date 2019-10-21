@@ -343,6 +343,7 @@ def gen_IC_vel(res):
 
 def gen_IC_vel1(res, Kf):
     
+<<<<<<< HEAD
     sz=res**2
 
     PI=np.pi
@@ -443,7 +444,28 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
                 orientation='portrait', papertype=None, format=None,
                 transparent=False, bbox_inches=None, pad_inches=0.1,
                 metadata=None) 
+=======
+
+def dealiasing(cut_off, Nnod):
     
+    Nhalf=int(Nnod/2)
+    cf=int(np.round(cut_off*Nnod/2.))
+    w = np.ones((Nhalf+1,1))
+    cut = np.zeros((Nhalf-cf,1))
+    
+    w[cf+1::]=cut
+    w_fliped=np.flip(w[1::])
+    
+    w=np.append(w,w_fliped)
+    
+    cutoff = np.zeros((Nnod,Nnod))
+>>>>>>> 5f328445eccd1c70481be4c06ece1a1a1a36f314
+    
+    for i2 in range(0,Nnod):
+        for i1 in range(0,Nnod):
+            cutoff[i1,i2] = w[i1]*w[i2]
+                
+    return cutoff    
     
     
     
