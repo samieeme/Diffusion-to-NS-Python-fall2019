@@ -341,25 +341,108 @@ def gen_IC_vel(res):
 
     return u1_w2, u2_w2
 
+def gen_IC_vel1(res, Kf):
+    
+    sz=res**2
+
+    PI=np.pi
+    
+    u_w=np.zeros((sz,2),dtype=complex)
+    
+    wave_n=np.array([0.0,0.0])
+    max_wave=int(res/2)
+    ndx=0
+    
+    for j in range(0,res):
+        for i in range(0,res):
+            
+            wave_n[0]=i
+            if i > max_wave:
+                wave_n[0]=i-res
+            wave_n[1]=j
+            if j > max_wave:
+                wave_n[1]=j-res
+            
+            k_tmp=LA.norm(wave_n, ord=2)
+            Esp=np.round(k_tmp)
+            
+            theta=np.random.uniform(0.0,2*PI,2)
+            psi=np.random.uniform(0.0,2*PI)
+            
+            phs1=np.exp(1j*theta[0])
+            phs2=np.exp(1j*theta[1])
+            Amp=1.0/PI
+            
+            if Esp <= Kf:
+                A1=np.sqrt(Amp*Esp/Kf**3)
+                u_w[ndx,0]=A1*np.cos(psi)*phs1
+                u_w[ndx,1]=A1*np.sin(psi)*phs2
+            else:
+                A1=np.sqrt(Amp)*Kf/Esp**2
+                u_w[ndx,0]=A1*np.cos(psi)*phs1
+                u_w[ndx,1]=A1*np.sin(psi)*phs2
+                
+            ndx +=1
+    
+    u1_w2=u_w[:,0].reshape(res,res)
+    u2_w2=u_w[:,1].reshape(res,res)
+    
+    
+    return u1_w2, u2_w2
+
+def get_vorticity(Nnod,V1hat,V2hat):
+
+    kx = np.zeros((Nnod,Nnod),dtype=complex)
+    ky = np.zeros((Nnod,Nnod),dtype=complex)
+    
+    for i1 in range(Nnod):
+        if i1 <= (Nnod-1)/2:
+           kx[i1,:] = complex(0,i1)
+           ky[:,i1] = complex(0,i1)
+        else:
+           kx[i1,:] = complex(0,i1-Nnod)  
+           ky[:,i1] = complex(0,i1-Nnod) 
+    
+    divhat_x = - kx * V2hat
+    divhat_y = - ky * V1hat
+    diverx_V = np.real(np.fft.ifft2(divhat_y-divhat_x))
+    return diverx_V
+
 def plot_Vel(X,Y,U,V,n,map_type):
 
 
     fig = plt.figure(figsize=(14,11))
     plt.subplot(2,2,1)
     plt.contourf(X,Y,U,100,cmap=map_type)
-    plt.title('$u_1^{solver}(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
+    plt.title('$u_1(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
     plt.xlabel('$x_1$', fontsize=13.5)
     plt.ylabel('$x_2$', fontsize=13.5)
     plt.colorbar()
 
     plt.subplot(2,2,2)
     plt.contourf(X,Y,V,100,cmap=map_type)
-    plt.title('$u_1^{exact}(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
+    plt.title('$u_2(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
     plt.xlabel('$x_1$', fontsize=13.5)
     plt.ylabel('$x_2$', fontsize=13.5)
     plt.colorbar()
 
     plt.show()
+    
+def plot_Vor(X,Y,Vor,n,icnt,map_type):
+
+    fig = plt.figure(figsize=(6.5,5))
+    plt.contourf(X,Y,Vor,100,cmap=map_type)
+    plt.title('$\omega_z(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.xlabel('$x_1$', fontsize=15)
+    plt.ylabel('$x_2$', fontsize=15)
+    plt.colorbar()
+
+#    plt.show()
+    
+    plt.savefig('Out_T'+str(icnt)+'.pdf', dpi=None, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                metadata=None) 
     
     
     
