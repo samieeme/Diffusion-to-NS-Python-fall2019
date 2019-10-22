@@ -138,36 +138,45 @@ def diff_AB(Nnod,fhat,fhat_old,vhat,vhat_old,diffusivity,dt):
     solution = operator_diff * vhat + 3.0/2.0*operator_force * fhat - 1.0/2.0*operator_force * fhat_old 
     return solution    
 
-
-def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,diffusivity,dt):
-    #frac_L = np.zeros((Nnod,Nnod))
+##################################################################
+def derivatives(Nnod):
+    
     kxx = np.zeros((Nnod,Nnod))
     kyy = np.zeros((Nnod,Nnod))
-   # kx[0,0]=1.0/10000000.0
+     
     for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
+        if i1 <= (Nnod-1)/2.0:
             kxx[i1,:] = i1
         else:
             kxx[i1,:] = (i1-Nnod)
+
     for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
+        if i2 <= (Nnod-1)/2.0:
             kyy[:,i2] = i2
         else:
             kyy[:,i2] = (i2-Nnod)
-    
+
     kx = np.zeros((Nnod,Nnod),dtype=complex)
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-           kx[i1,:] = complex(0,i1)
-        else:
-           kx[i1,:] = complex(0,i1-Nnod)   
     ky = np.zeros((Nnod,Nnod),dtype=complex)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-           ky[:,i2] = complex(0,i2)
+    
+    for i1 in range(Nnod):
+        if i1 <= (Nnod-1)/2.0:
+            kx[i1,:] = complex(0,i1)
         else:
-           ky[:,i2] = complex(0,i2-Nnod)                  
-    alpha = 1;
+            kx[i1,:] = complex(0,i1-Nnod)   
+
+    for i2 in range(Nnod):
+        if i2 <= (Nnod-1)/2.0:
+            ky[:,i2] = complex(0,i2)
+        else:
+            ky[:,i2] = complex(0,i2-Nnod)
+
+    return kxx, kyy, kx, ky
+   
+
+def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,diffusivity,dt,kxx,kyy,kx,ky):
+              
+    alpha = 1
     bb = 0.5
     identity = np.ones((Nnod,Nnod))
     operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
@@ -178,35 +187,9 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,diffusivity,dt):
     solution = operator_diff * vhat + 1.0*operator_adv
     return solution    
     
-def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,diffusivity,dt):
-    #frac_L = np.zeros((Nnod,Nnod))
-    kxx = np.zeros((Nnod,Nnod))
-    kyy = np.zeros((Nnod,Nnod))
-    #kx[0,0]=1.0/10000000.0
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-            kxx[i1,:] = i1
-        else:
-            kxx[i1,:] = (i1-Nnod)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-            kyy[:,i2] = i2
-        else:
-            kyy[:,i2] = (i2-Nnod)
-    
-    kx = np.zeros((Nnod,Nnod),dtype=complex)
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-           kx[i1,:] = complex(0,i1)
-        else:
-           kx[i1,:] = complex(0,i1-Nnod)   
-    ky = np.zeros((Nnod,Nnod),dtype=complex)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-           ky[:,i2] = complex(0,i2)
-        else:
-           ky[:,i2] = complex(0,i2-Nnod)    
-    alpha = 1;
+def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,diffusivity,dt,kxx,kyy,kx,ky):
+
+    alpha = 1
     bb = 0.5
     identity = np.ones((Nnod,Nnod))
     operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
@@ -219,61 +202,23 @@ def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,d
     return solution 
     
     
-def diff_cont(Nnod,uhat,vhat):
-    divhat = np.zeros((Nnod,Nnod))
-    kxx = np.zeros((Nnod,Nnod))
-    kyy = np.zeros((Nnod,Nnod))
-   # kx[0,0]=1.0/10000000.0
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-            kxx[i1,:] = i1
-        else:
-            kxx[i1,:] = (i1-Nnod)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-            kyy[:,i2] = i2
-        else:
-            kyy[:,i2] = (i2-Nnod)
-    kx = np.zeros((Nnod,Nnod),dtype=complex)
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-           kx[i1,:] = complex(0,i1)
-        else:
-           kx[i1,:] = complex(0,i1-Nnod)   
-    ky = np.zeros((Nnod,Nnod),dtype=complex)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-           ky[:,i2] = complex(0,i2)
-        else:
-           ky[:,i2] = complex(0,i2-Nnod)    
+def diff_cont(Nnod,uhat,vhat,kxx,kyy,kx,ky):
            
-    alpha = 1;
+    alpha = 1
     frac_L = (kxx[:]**2+kyy[:]**2)**(alpha)
     frac_L[0,0]=1.0
     frac_R=1.0/frac_L
     fhat = kx * uhat + ky * vhat
     
     divhat = frac_R * fhat
-   # diverz_V = np.real(np.fft.ifft2(divhat))
+
     divhat[0,0] = 0.0
     return divhat
     
-def corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt):
-    kx = np.zeros((Nnod,Nnod),dtype=complex)
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-           kx[i1,:] = complex(0,i1)
-        else:
-           kx[i1,:] = complex(0,i1-Nnod)   
-    ky = np.zeros((Nnod,Nnod),dtype=complex)
-    for i2 in range(Nnod):
-        if i2 <= (Nnod-1)/2:
-           ky[:,i2] = complex(0,i2)
-        else:
-           ky[:,i2] = complex(0,i2-Nnod)     
+def corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky):
     
-    uhatnew = Uhat_tilde[:] -  (-1.0*kx[:]) * phat[:]
-    vhatnew = Vhat_tilde[:] -  (-1.0*ky[:]) * phat[:]
+    uhatnew = Uhat_tilde[:] - (-1.0*kx[:]) * phat[:]
+    vhatnew = Vhat_tilde[:] - (-1.0*ky[:]) * phat[:]
     
     return uhatnew, vhatnew
 
@@ -390,18 +335,7 @@ def gen_IC_vel1(res, Kf):
     
     return u1_w2, u2_w2
 
-def get_vorticity(Nnod,V1hat,V2hat):
-
-    kx = np.zeros((Nnod,Nnod),dtype=complex)
-    ky = np.zeros((Nnod,Nnod),dtype=complex)
-    
-    for i1 in range(Nnod):
-        if i1 <= (Nnod-1)/2:
-           kx[i1,:] = complex(0,i1)
-           ky[:,i1] = complex(0,i1)
-        else:
-           kx[i1,:] = complex(0,i1-Nnod)  
-           ky[:,i1] = complex(0,i1-Nnod) 
+def get_vorticity(Nnod,V1hat,V2hat,kx,ky):
     
     divhat_x = - kx * V2hat
     divhat_y = - ky * V1hat
@@ -443,26 +377,6 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
                 orientation='portrait', papertype=None, format=None,
                 transparent=False, bbox_inches=None, pad_inches=0.1,
                 metadata=None) 
-
-def dealiasing(cut_off, Nnod):
-    
-    Nhalf=int(Nnod/2)
-    cf=int(np.round(cut_off*Nnod/2.))
-    w = np.ones((Nhalf+1,1))
-    cut = np.zeros((Nhalf-cf,1))
-    
-    w[cf+1::]=cut
-    w_fliped=np.flip(w[1::])
-    
-    w=np.append(w,w_fliped)
-    
-    cutoff = np.zeros((Nnod,Nnod))
-    
-    for i2 in range(0,Nnod):
-        for i1 in range(0,Nnod):
-            cutoff[i1,i2] = w[i1]*w[i2]
-                
-    return cutoff    
     
     
     

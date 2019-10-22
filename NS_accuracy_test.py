@@ -8,12 +8,16 @@ from numpy import linalg as LA
 #from functions import remain, deriv_x, deriv_y, deriv_z, div, Reduce_period, optimum_prnt
 #from Outputs import Output_Corr
 
-from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, gen_IC_vel, gen_IC_vel1, get_vorticity, plot_Vel, plot_Vor, dealiasing
+from functions_NS_2D import derivatives, adv_FE, adv_AB, diff_cont, corrector, gen_IC_vel, gen_IC_vel1, get_vorticity, plot_Vel, plot_Vor, dealiasing
 
-Nnod = 128
+Nnod = 256
 meshX = np.linspace(0,2*np.pi,Nnod+1)
 meshX = np.delete(meshX,Nnod,None)
 X,Y = np.meshgrid(meshX,meshX)
+
+#Computing derivatives' matrices
+
+kxx, kyy, kx, ky = derivatives(Nnod)
 
 #Computing the cut-off frequency matrix for dealiasing
 cut_off=0.67
@@ -40,7 +44,7 @@ Kf=3
 Uhat,Vhat=gen_IC_vel1(Nnod,Kf)
 
 
-Vor=get_vorticity(Nnod,Uhat,Vhat)
+Vor=get_vorticity(Nnod,Uhat,Vhat,kx,ky)
 plot_Vor(X,Y,Vor,out_t[0],1,'seismic')
 
 U = np.real(np.fft.ifft2(Uhat))
@@ -64,12 +68,12 @@ adv_velxy_hatold = adv_velxy_hat[:]
 adv_velyy_hatold = adv_velyy_hat[:]
 
 
-Uhat_tilde = adv_FE(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,visc,dt)
-Vhat_tilde = adv_FE(Nnod,Vhat,adv_velxy_hat,adv_velyy_hat,visc,dt)
+Uhat_tilde = adv_FE(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,visc,dt,kxx,kyy,kx,ky)
+Vhat_tilde = adv_FE(Nnod,Vhat,adv_velxy_hat,adv_velyy_hat,visc,dt,kxx,kyy,kx,ky)
 
-phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde)
+phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde,kxx,kyy,kx,ky)
 
-Uhat,Vhat=corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt)
+Uhat,Vhat=corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky)
 
 U = np.real(np.fft.ifft2(Uhat))
 V = np.real(np.fft.ifft2(Vhat))
@@ -92,12 +96,12 @@ for j in range(2,jmax+1):
     adv_velyy_hat = (np.fft.fft2(adv_velyy))*c_off
 
 
-    Uhat_tilde=adv_AB(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,adv_velxy_hatold,visc,dt)
-    Vhat_tilde=adv_AB(Nnod,Vhat,adv_velxy_hat,adv_velyy_hat,adv_velxy_hatold,adv_velyy_hatold,visc,dt)
+    Uhat_tilde=adv_AB(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,adv_velxy_hatold,visc,dt,kxx,kyy,kx,ky)
+    Vhat_tilde=adv_AB(Nnod,Vhat,adv_velxy_hat,adv_velyy_hat,adv_velxy_hatold,adv_velyy_hatold,visc,dt,kxx,kyy,kx,ky)
 
-    phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde)
+    phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde,kxx,kyy,kx,ky)
 
-    Uhat,Vhat=corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt)
+    Uhat,Vhat=corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky)
 
 
     U = np.real(np.fft.ifft2(Uhat))
@@ -107,7 +111,7 @@ for j in range(2,jmax+1):
                
 #        plot_Vel(X,Y,U,V,j,'seismic')
         
-        Vor=get_vorticity(Nnod,Uhat,Vhat)
+        Vor=get_vorticity(Nnod,Uhat,Vhat,kx,ky)
         plot_Vor(X,Y,Vor,out_t[icnt],icnt+1,'seismic')
         icnt +=1
 #        out += freq_out
