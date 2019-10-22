@@ -9,6 +9,7 @@ from numpy import linalg as LA
 #from Outputs import Output_Corr
 
 from functions_NS_2D import derivatives, adv_FE, adv_AB, diff_cont, corrector, gen_IC_vel, gen_IC_vel1, get_vorticity, plot_Vel, plot_Vor, dealiasing
+from functions_stats import get_sphere_waven, get_stats_eng
 
 Nnod = 256
 meshX = np.linspace(0,2*np.pi,Nnod+1)
