@@ -192,20 +192,27 @@ def get_diffusion_opt(alpha,dt,nu,Nnod,kxx,kyy):
     return operator_diff, den, frac_R
     
 
-def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den):
+def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den,af,ndx_f,sz_f):
     
-    operator_adv = dt*(kx*adv_velx_hat+ky*adv_vely_hat)/den
+    operator_adv = kx*adv_velx_hat+ky*adv_vely_hat
+    
+    for i in range(0,sz_f):
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
 
-    solution = operator_diff * vhat + operator_adv
+    solution = operator_diff * vhat + dt*operator_adv/den
     
     return solution    
     
-def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den):
+def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den,af,af_old,ndx_f,sz_f):
 
-    operator_adv=dt*(kx*adv_velx_hat+ky*adv_vely_hat)/den
-    operator_adv_old=dt*(kx*adv_velx_hatold+ky*adv_vely_hatold)/den
+    operator_adv=kx*adv_velx_hat+ky*adv_vely_hat
+    operator_adv_old=kx*adv_velx_hatold+ky*adv_vely_hatold
     
-    solution = operator_diff * vhat + 1.5*operator_adv - 0.5*operator_adv_old
+    for i in range(0,sz_f):
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
+        operator_adv_old[ndx_f[i,0],ndx_f[i,1]] += af_old[i]
+    
+    solution = operator_diff * vhat + dt*(1.5*operator_adv - 0.5*operator_adv_old)/den
     
     return solution 
     
@@ -345,8 +352,8 @@ def get_vorticity(Nnod,V1hat,V2hat,kx,ky):
     
     divhat_x = - kx * V2hat
     divhat_y = - ky * V1hat
-    diverx_V = np.real(np.fft.ifft2(divhat_y-divhat_x))
-    return diverx_V
+    Vor = np.real(np.fft.ifft2(divhat_y-divhat_x))
+    return Vor
 
 def plot_Vel(X,Y,U,V,n,map_type):
 

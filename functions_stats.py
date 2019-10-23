@@ -40,12 +40,24 @@ def get_sphere_waven(res):
 
     return K_sh, K_sh2, K_sh4
 
-def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4):
+def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc):
     
     
     E_k = 0.5*((uhat*np.conj(uhat) + vhat*np.conj(vhat)).real)**0.5
     
     TKE = np.sum(E_k)
+    
+    TKE_EngC = 0.0
+    Uhat_EC = np.zeros((sz_frc,2),dtype=complex)
+    
+    for i in range(0,sz_frc):
+        
+        TKE_EngC += E_k[ndx_frc[i,0],ndx_frc[i,1]]
+        
+        Uhat_EC[i,0] = uhat[ndx_frc[i,0],ndx_frc[i,1]]
+        Uhat_EC[i,1] = vhat[ndx_frc[i,0],ndx_frc[i,1]]
+    
+    TKE_EngC *= 2.0
     
     Enst = np.sum(K_sh2*E_k)
     
@@ -61,7 +73,9 @@ def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4):
     
     Re_l = Enst**1.5/eta
     
-    return TKE, Enst, eta, Diss, K_eta, int_lscale, mic_lscale, Re_l
+    Uhat_EC *= Diss/TKE_EngC
+    
+    return TKE, Enst, eta, Diss, K_eta, int_lscale, mic_lscale, Re_l, Uhat_EC
 
     
 #def artificial_forcing(E_k,Diss,)    
