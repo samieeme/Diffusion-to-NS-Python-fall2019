@@ -10,7 +10,7 @@ from numpy import linalg as LA
 import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Helvetica']})
-rc('text', usetex=True)
+#rc('text', usetex=True)
 
 def forcef(x,y):
     return -4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y)
@@ -197,7 +197,7 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den,af,ndx
     operator_adv = kx*adv_velx_hat+ky*adv_vely_hat
     
     for i in range(0,sz_f):
-        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] -= af[i]
 
     solution = operator_diff * vhat + dt*operator_adv/den
     
@@ -209,8 +209,8 @@ def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,d
     operator_adv_old=kx*adv_velx_hatold+ky*adv_vely_hatold
     
     for i in range(0,sz_f):
-        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
-        operator_adv_old[ndx_f[i,0],ndx_f[i,1]] += af_old[i]
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] -= af[i]
+        operator_adv_old[ndx_f[i,0],ndx_f[i,1]] -= af_old[i]
     
     solution = operator_diff * vhat + dt*(1.5*operator_adv - 0.5*operator_adv_old)/den
     

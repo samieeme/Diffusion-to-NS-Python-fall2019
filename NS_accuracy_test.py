@@ -12,8 +12,8 @@ from functions_NS_2D import diff_cont, corrector, gen_IC_vel, gen_IC_vel1
 from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor, dealiasing
 from functions_stats import get_sphere_waven, get_stats_eng
 
-Nnod = 512
-visc = 0.01
+Nnod = 256
+visc = 0.0001
 dt = 0.0001
 alpha = 1.0
 
@@ -34,13 +34,18 @@ c_off=dealiasing(cut_off,Nnod)
 
 
 
-out=np.array([0,5,10,40,100,200,300,500,700,1000,
-              2000,3000,4000,5000,6000,7000,8000,9000,10000])
-out_t=np.array([0.0,0.001,0.004,0.01,0.02,0.03,0.05,0.07,0.1,
-                0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+#out=np.array([0,5,10,40,100,200,300,500,700,1000,
+#              2000,3000,4000,5000,6000,7000,8000,9000,10000,15000,20000,25000,
+#              30000,35000,40000,45000,50000,55000,60000,65000,70000,75000,80000])
+#out_t=np.array([0.0,0.001,0.004,0.01,0.02,0.03,0.05,0.07,0.1,
+#                0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.5,2.0,2.5,3.0,3.5,4.0,
+#                4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0])
 
 #out=np.array([0,5000,15000,30000,70000,100000])
 #out_t=np.array([0.0,0.5,1.5,3.0,7.0,10.0])
+
+out = np.linspace(0,2000000,401,dtype=int)
+out_t = np.linspace(0,200,401)
 
 Ntmax=out[-1]
 #out=20
@@ -49,7 +54,7 @@ Ntmax=out[-1]
 
 #Uhat,Vhat=gen_IC_vel(Nnod)
 Wmax=(Nnod*2**0.5)/3.0
-Kf=2.0*2.0**0.5
+Kf=2.0**0.5
 Uhat,Vhat=gen_IC_vel1(Nnod,Kf)
 
 tmp = np.nonzero(K_sh <= Kf)
@@ -98,7 +103,7 @@ a_frc_old = a_frc
 TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,a_frc=get_stats_eng(
         Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
 
-print(Wmax/K_eta,Re_l,int_l,mic_l,TKE,Enst,eta,Diss, sep=' ', end='\n')
+print(Wmax/K_eta,TKE,Enst,eta,Diss, sep=' ', end='\n')
 
 
 U = np.real(np.fft.ifft2(Uhat))
@@ -148,7 +153,7 @@ for nt in range(2,Ntmax+1):
         plot_Vor(X,Y,Vor,out_t[icnt],icnt+1,'seismic')
         
 #        TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l=get_stats_eng(Uhat,Vhat,visc,K_sh,K_sh2,K_sh4)
-        print(Wmax/K_eta,Re_l,int_l,mic_l,TKE,Enst,eta,Diss, sep=' ', end='\n')
+        print(Wmax/K_eta,TKE,Enst,eta,Diss, sep=' ', end='\n')
         
         icnt +=1
 #        out += freq_out
