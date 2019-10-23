@@ -8,8 +8,8 @@ Created on Tue Oct  8 10:57:08 2019
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
-from matplotlib import rc
-rc('font',**{'family':'serif','serif':['Helvetica']})
+#from matplotlib import rc
+#rc('font',**{'family':'serif','serif':['Helvetica']})
 #rc('text', usetex=True)
 
 def forcef(x,y):
@@ -197,7 +197,7 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den,af,ndx
     operator_adv = kx*adv_velx_hat+ky*adv_vely_hat
     
     for i in range(0,sz_f):
-        operator_adv[ndx_f[i,0],ndx_f[i,1]] -= af[i]
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
 
     solution = operator_diff * vhat + dt*operator_adv/den
     
@@ -209,8 +209,8 @@ def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,d
     operator_adv_old=kx*adv_velx_hatold+ky*adv_vely_hatold
     
     for i in range(0,sz_f):
-        operator_adv[ndx_f[i,0],ndx_f[i,1]] -= af[i]
-        operator_adv_old[ndx_f[i,0],ndx_f[i,1]] -= af_old[i]
+        operator_adv[ndx_f[i,0],ndx_f[i,1]] += af[i]
+        operator_adv_old[ndx_f[i,0],ndx_f[i,1]] += af_old[i]
     
     solution = operator_diff * vhat + dt*(1.5*operator_adv - 0.5*operator_adv_old)/den
     
@@ -361,16 +361,16 @@ def plot_Vel(X,Y,U,V,n,map_type):
     fig = plt.figure(figsize=(14,11))
     plt.subplot(2,2,1)
     plt.contourf(X,Y,U,100,cmap=map_type)
-    plt.title('$u_1(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
-    plt.xlabel('$x_1$', fontsize=13.5)
-    plt.ylabel('$x_2$', fontsize=13.5)
+    plt.title('$u_1(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.xlabel('$x_1$', fontsize=15)
+    plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
     plt.subplot(2,2,2)
     plt.contourf(X,Y,V,100,cmap=map_type)
-    plt.title('$u_2(\mathbf{x}),$ $N_t=$'+str(n), fontsize=16.5)
-    plt.xlabel('$x_1$', fontsize=13.5)
-    plt.ylabel('$x_2$', fontsize=13.5)
+    plt.title('$u_2(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.xlabel('$x_1$', fontsize=15)
+    plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
     plt.show()
