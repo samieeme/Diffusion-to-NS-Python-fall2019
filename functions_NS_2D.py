@@ -174,53 +174,58 @@ def derivatives(Nnod):
     return kxx, kyy, kx, ky
    
 
-def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,diffusivity,dt,kxx,kyy,kx,ky):
-              
-    alpha = 1
-    bb = 0.5
-    identity = np.ones((Nnod,Nnod))
-    operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-#    operator_force = dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-    operator_adv = dt*(kx[:]*adv_velx_hat[:]+ky[:]*adv_vely_hat[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
+def get_diffusion_opt(alpha,dt,nu,Nnod,kxx,kyy):
     
-#    solution = operator_diff * vhat + operator_force * fhat + 1.0*operator_adv
-    solution = operator_diff * vhat + 1.0*operator_adv
+    identity = np.ones((Nnod,Nnod))
+    
+    frac_L = (kxx**2+kyy**2)**(alpha)
+    
+    den = identity+0.5*dt*nu*frac_L
+    
+    num = identity-0.5*dt*nu*frac_L
+    
+    operator_diff = num/den
+    
+    frac_L[0,0] = 1.0
+    frac_R = 1.0/frac_L
+    
+    return operator_diff, den, frac_R
+    
+
+def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den):
+    
+    operator_adv = dt*(kx*adv_velx_hat+ky*adv_vely_hat)/den
+
+    solution = operator_diff * vhat + operator_adv
+    
     return solution    
     
-def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,diffusivity,dt,kxx,kyy,kx,ky):
+def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den):
 
-    alpha = 1
-    bb = 0.5
-    identity = np.ones((Nnod,Nnod))
-    operator_diff = (identity[:]-diffusivity*dt*(1.0-bb)*(kxx[:]**2+kyy[:]**2)**(alpha))/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-#    operator_force = dt*(identity[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-    operator_adv = dt*(kx[:]*adv_velx_hat[:]+ky[:]*adv_vely_hat[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
-    operator_adv_old = dt*(kx[:]*adv_velx_hatold[:]+ky[:]*adv_vely_hatold[:])/(identity[:]+diffusivity*dt*bb*(kxx[:]**2+kyy[:]**2)**(alpha))
+    operator_adv=dt*(kx*adv_velx_hat+ky*adv_vely_hat)/den
+    operator_adv_old=dt*(kx*adv_velx_hatold+ky*adv_vely_hatold)/den
     
-#    solution = operator_diff * vhat + 3.0/2.0*operator_force * fhat - 1.0/2.0*operator_force * fhat_old + 3.0/2.0*operator_adv - 1.0/2.0*operator_adv_old
-    solution = operator_diff * vhat + 3.0/2.0*operator_adv - 1.0/2.0*operator_adv_old
+    solution = operator_diff * vhat + 1.5*operator_adv - 0.5*operator_adv_old
+    
     return solution 
     
     
-def diff_cont(Nnod,uhat,vhat,kxx,kyy,kx,ky):
+def diff_cont(Nnod,uhat,vhat,kx,ky,frac_R):
            
-    alpha = 1
-    frac_L = (kxx[:]**2+kyy[:]**2)**(alpha)
-    frac_L[0,0]=1.0
-    frac_R=1.0/frac_L
     fhat = kx * uhat + ky * vhat
     
     divhat = frac_R * fhat
 
     divhat[0,0] = 0.0
+    
     return divhat
     
 def corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky):
     
-    uhatnew = Uhat_tilde[:] - (-1.0*kx[:]) * phat[:]
-    vhatnew = Vhat_tilde[:] - (-1.0*ky[:]) * phat[:]
+    Uhat_new = Uhat_tilde + kx * phat
+    Vhat_new = Vhat_tilde + ky * phat
     
-    return uhatnew, vhatnew
+    return Uhat_new, Vhat_new
 
 def dealiasing(cut_off, Nnod):
 
@@ -309,7 +314,8 @@ def gen_IC_vel1(res, Kf):
                 wave_n[1]=j-res
             
             k_tmp=LA.norm(wave_n, ord=2)
-            Esp=np.round(k_tmp)
+#            Esp=np.round(k_tmp)
+            Esp=k_tmp
             
             theta=np.random.uniform(0.0,2*PI,2)
             psi=np.random.uniform(0.0,2*PI)
@@ -371,12 +377,12 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
-#    plt.show()
+    plt.show()
     
-    plt.savefig('Out_T'+str(icnt)+'.pdf', dpi=None, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, bbox_inches=None, pad_inches=0.1,
-                metadata=None) 
+#    plt.savefig('Out_T'+str(icnt)+'.pdf', dpi=None, facecolor='w', edgecolor='w',
+#                orientation='portrait', papertype=None, format=None,
+#                transparent=False, bbox_inches=None, pad_inches=0.1,
+#                metadata=None) 
     
     
     

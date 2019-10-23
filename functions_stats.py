@@ -43,7 +43,7 @@ def get_sphere_waven(res):
 def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4):
     
     
-    E_k = 0.5 * ((uhat*np.conj(uhat) + vhat*np.conj(vhat)).real)**0.5
+    E_k = 0.5*((uhat*np.conj(uhat) + vhat*np.conj(vhat)).real)**0.5
     
     TKE = np.sum(E_k)
     
@@ -62,6 +62,7 @@ def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4):
     Re_l = Enst**1.5/eta
     
     return TKE, Enst, eta, Diss, K_eta, int_lscale, mic_lscale, Re_l
+
     
-    
+#def artificial_forcing(E_k,Diss,)    
     
