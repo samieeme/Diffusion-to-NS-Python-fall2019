@@ -46,7 +46,7 @@ def deriv_x(Nnod,Vhat):
            kx[i1,:,:] = complex(0,i1-Nnod)   
     
     divhat = kx * Vhat
-    diverx_V = np.real(np.fft.ifftn(divhat))
+    diverx_V = np.fft.ifftn(divhat)*(Nnod)**2
     return diverx_V
 
 def diff_x(Nnod,Vhat):
@@ -61,7 +61,7 @@ def diff_x(Nnod,Vhat):
     alpha = 1;
     frac_L = -(kx[:]**2)**(alpha)       
     divhat = frac_L * Vhat
-    diverz_V = np.real(np.fft.ifft2(divhat))
+    diverz_V = np.fft.ifft2(divhat)*(Nnod)**2
     return diverz_V
 
 def diff_eq(Nnod,fhat):
@@ -84,7 +84,7 @@ def diff_eq(Nnod,fhat):
     frac_L[0,0]=1.0
     frac_R=1.0/frac_L
     divhat = frac_R * fhat
-    diverz_V = np.real(np.fft.ifft2(divhat))
+    diverz_V = np.fft.ifft2(divhat)*(Nnod)**2
     diverz_V[0,0] = 0.0
     return diverz_V
 
@@ -201,7 +201,7 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den,af,ndx
 
     solution = operator_diff * vhat + dt*operator_adv/den
     
-    return solution    
+    return solution, adv_vely_hat    
     
 def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den,af,af_old,ndx_f,sz_f):
 
@@ -348,11 +348,74 @@ def gen_IC_vel1(res, Kf):
     
     return u1_w2, u2_w2
 
+def gen_IC_vel2(res, Kf):
+    sz=res**2
+
+    PI=np.pi
+
+    u_w=np.zeros((res,res),dtype=complex)
+    v_w=np.zeros((res,res),dtype=complex)
+    
+    wave_n=np.array([0.0,0.0])
+    max_wave=int(res/2)
+    ndx=0
+
+
+    thetax1=(np.random.uniform(0.0,2*PI,res))
+    thetax2=(np.random.uniform(0.0,2*PI,res))
+    thetay1=(np.random.uniform(0.0,2*PI,res))
+    thetay2=(np.random.uniform(0.0,2*PI,res))
+    
+    psi1=(np.random.uniform(0.0,2*PI,res))
+    psi2=(np.random.uniform(0.0,2*PI,res))
+    thetax1[0]=0
+    thetax2[0]=0
+    thetay1[0]=0
+    thetay2[0]=0
+    for i in range(1,res):
+        if i > max_wave:
+            thetax1[i]=-thetax1[res-i]
+            thetax2[i]=-thetax2[res-i]
+            thetay1[i]=-thetay1[res-i]
+            thetay2[i]=-thetay2[res-i]
+            psi1[i]=psi1[res-i]
+            psi2[i]=psi2[res-i]
+            
+    for j in range(0,res):
+        for i in range(0,res):
+
+            wave_n[0]=i
+            if i > max_wave:
+                wave_n[0]=i-res
+            wave_n[1]=j
+            if j > max_wave:
+                wave_n[1]=j-res
+            k_tmp=LA.norm(wave_n, ord=2)
+            if k_tmp == 0.0:
+               k_tmp =0.0001
+               
+            Esp=np.round(k_tmp)
+            if Esp == 0.0:
+               Esp =0.0001
+               
+            phs1=np.exp(1j*thetax1[i]+1j*thetax2[j])
+            phs2=np.exp(1j*thetay1[i]+1j*thetay2[j])
+
+            Amp=np.sqrt(2.0/3.0*Esp*np.exp(-2*Esp/3.0)/(PI*Esp))
+            u_w[i,j]=Amp*np.cos(psi1[i]+psi2[j])*phs1
+            v_w[i,j]=Amp*np.sin(psi1[i]+psi2[j])*phs2
+
+            ndx +=1
+
+   # u1_w2=u_w[:,0].reshape(res,res)
+   # u2_w2=u_w[:,1].reshape(res,res)
+    return u_w, v_w
+
 def get_vorticity(Nnod,V1hat,V2hat,kx,ky):
     
     divhat_x = - kx * V2hat
     divhat_y = - ky * V1hat
-    Vor = np.real(np.fft.ifft2(divhat_y-divhat_x))
+    Vor = np.fft.ifft2(divhat_y-divhat_x)*(Nnod)**2
     return Vor
 
 def plot_Vel(X,Y,U,V,n,map_type):

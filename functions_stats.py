@@ -82,12 +82,13 @@ def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc):
     
     Uhat_EC *= Diss/TKE_EngC
     
-    return TKE,Enst,eta,Diss,K_eta,int_lscale,mic_lscale,Re_l,Re_L,T_L,Uhat_EC
+    return TKE,Enst,eta,Diss,K_eta,int_lscale,mic_lscale,Re_l,Re_L,T_L,0.*Uhat_EC
 
 def deriv_(Vhat,K):
            
     divhat = - K * Vhat
-    diver_V = np.real(np.fft.ifft2(divhat))
+    Nnod = divhat.shape[0]
+    diver_V = np.fft.ifft2(divhat)*(Nnod)**2
     
     return diver_V
 

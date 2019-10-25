@@ -29,7 +29,7 @@ visc = 1.0
 schm = 1.0
 err = np.zeros([5]) 
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #for convergence test
 #for kt in range(5): 
 
@@ -43,7 +43,7 @@ for i in range(Nnod):
         U[i,j] = Ux_t(meshX[i],meshX[j],(1-1)*dt,visc) 
         V[i,j] = Uy_t(meshX[i],meshX[j],(1-1)*dt,visc) 
 #        f[i,j] = forcef(meshX[i],meshX[j])
-=======
+#=======
 #Computing the cut-off frequency matrix for dealiasing
 cut_off = 0.3
 c_off=dealiasing(cut_off,Nnod)
@@ -58,7 +58,7 @@ for kt in range(5):
             U[i,j] = Ux_t(meshX[i],meshX[j],(1-1)*dt,visc) 
             V[i,j] = Uy_t(meshX[i],meshX[j],(1-1)*dt,visc) 
     #        f[i,j] = forcef(meshX[i],meshX[j])
->>>>>>> 5f328445eccd1c70481be4c06ece1a1a1a36f314
+#>>>>>>> 5f328445eccd1c70481be4c06ece1a1a1a36f314
     
     adv_velxx = U[:] * U[:] 
     adv_velxy = U[:] * V[:] 
