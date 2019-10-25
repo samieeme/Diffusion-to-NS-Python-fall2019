@@ -68,11 +68,11 @@ def get_diffusion_opt(alpha,dt,nu,Nnod,kxx,kyy,kzz):
     
     identity = np.ones((Nnod,Nnod,Nnod))
     
-    frac_L = (kxx**2+kyy**2+kzz**2)**(alpha)
+    frac_L = (kxx**2 + kyy**2 + kzz**2)**alpha
     
-    den = identity+0.5*dt*nu*frac_L
+    den = identity + 0.5*dt*nu*frac_L
     
-    num = identity-0.5*dt*nu*frac_L
+    num = identity - 0.5*dt*nu*frac_L
     
     operator_diff = num/den
     
@@ -82,10 +82,10 @@ def get_diffusion_opt(alpha,dt,nu,Nnod,kxx,kyy,kzz):
     return operator_diff, den, frac_R
     
 
-def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velz_hat,dt,kx,ky,kz,
-           operator_diff,den,af,ndx_f,sz_f):
+def adv_FE(Nnod, vhat, adv_u1_hat, adv_u2_hat, adv_u3_hat, dt, kx, ky, kz,
+           operator_diff, den, af, ndx_f, sz_f):
     
-    operator_adv = kx*adv_velx_hat+ky*adv_vely_hat+kz*adv_velz_hat
+    operator_adv = kx * adv_u1_hat + ky * adv_u2_hat + kz * adv_u3_hat
     
     for i in range(0,sz_f):
         operator_adv[ndx_f[i,0],ndx_f[i,1],ndx_f[i,2]] += af[i]
@@ -94,12 +94,12 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velz_hat,dt,kx,ky,kz,
     
     return solution    
     
-def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velz_hat,
-           adv_velx_hatold,adv_vely_hatold,adv_velz_hatold,dt,kx,ky,kz,
-           operator_diff,den,af,af_old,ndx_f,sz_f):
+def adv_AB(Nnod, vhat, adv_u1_hat, adv_u2_hat, adv_u3_hat,
+           adv_u1_hatold, adv_u2_hatold, adv_u3_hatold, dt, kx, ky, kz,
+           operator_diff, den, af, af_old, ndx_f, sz_f):
 
-    operator_adv = kx*adv_velx_hat + ky*adv_vely_hat + kz*adv_velz_hat
-    operator_adv_old = kx*adv_velx_hatold + ky*adv_vely_hatold + kz*adv_velz_hatold
+    operator_adv = kx*adv_u1_hat + ky*adv_u2_hat + kz*adv_u3_hat
+    operator_adv_old = kx*adv_u1_hatold + ky*adv_u2_hatold + kz*adv_u3_hatold
     
     for i in range(0,sz_f):
         operator_adv[ndx_f[i,0],ndx_f[i,1],ndx_f[i,2]] += af[i]
@@ -110,23 +110,24 @@ def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velz_hat,
     return solution 
     
     
-def diff_cont(Nnod,uhat,vhat,what,kx,ky,kz,frac_R):
+def diff_cont(Nnod, u1_hat, u2_hat, u3_hat, kx, ky, kz, frac_R):
            
-    fhat = kx * uhat + ky * vhat + kz * what
+    fhat = kx * u1_hat + ky * u2_hat + kz * u3_hat
     
-    divhat = frac_R * fhat
+    divhat = - frac_R * fhat
 
-    divhat[0,0] = 0.0
+    divhat[0,0,0] = 0.0
     
     return divhat
     
-def corrector(Nnod,Uhat_tilde,Vhat_tilde,What_tilde,phat,dt,kx,ky,kz):
+def corrector(Nnod, u1hat_tilde, u2hat_tilde, u3hat_tilde, phat, dt,
+              kx, ky, kz):
     
-    Uhat_new = Uhat_tilde + kx * phat
-    Vhat_new = Vhat_tilde + ky * phat
-    What_new = What_tilde + kz * phat
+    U1hat_new = u1hat_tilde - kx * phat
+    U2hat_new = u2hat_tilde - ky * phat
+    U3hat_new = u3hat_tilde - kz * phat
     
-    return Uhat_new, Vhat_new, What_new
+    return U1hat_new, U2hat_new, U3hat_new
 
 def dealiasing(cut_off, Nnod):
 
@@ -150,98 +151,106 @@ def dealiasing(cut_off, Nnod):
     return cutoff
     
     
-def gen_IC_vel(res):
+def gen_IC_vel(Nnod):
 
-    sz=res**2
-
-    PI=np.pi
-
-    u_w=np.zeros((sz,2),dtype=complex)
-
-    wave_n=np.array([0.0,0.0])
-    max_wave=int(res/2)
-    ndx=0
-
-    for j in range(0,res):
-        for i in range(0,res):
-
-            wave_n[0]=i
-            if i > max_wave:
-                wave_n[0]=i-res
-            wave_n[1]=j
-            if j > max_wave:
-                wave_n[1]=j-res
-
-            k_tmp=LA.norm(wave_n, ord=2)
-            Esp=np.round(k_tmp)
-
-            theta=np.random.uniform(0.0,2*PI,2)
-            psi=np.random.uniform(0.0,2*PI)
-
-            phs1=np.exp(1j*theta[0])
-            phs2=np.exp(1j*theta[1])
-
-            Amp=np.sqrt(2.0*np.exp(-2*Esp/3.0)/(3*PI))
-            u_w[ndx,0]=Amp*np.cos(psi)*phs1
-            u_w[ndx,1]=Amp*np.sin(psi)*phs2
-
-            ndx +=1
-
-    u1_w2=u_w[:,0].reshape(res,res)
-    u2_w2=u_w[:,1].reshape(res,res)
-
-
-    return u1_w2, u2_w2
-
-def gen_IC_vel1(res, Kf):
-    
-    sz=res**2
+    sz=Nnod**3
 
     PI=np.pi
+
+    Uhat=np.zeros((sz,3),dtype=complex)
+
+    wave_n=np.array([0.0,0.0,0.0])
+    max_wave=int(Nnod/2)
+    ndx=0
+
+    for k in range(0,Nnod):
+        for j in range(0,Nnod):
+            for i in range(0,Nnod):
+
+                wave_n[0]=i
+                if i > max_wave:
+                    wave_n[0]=i-Nnod
+                wave_n[1]=j
+                if j > max_wave:
+                    wave_n[1]=j-Nnod
+                wave_n[2]=k
+                if k > max_wave:
+                    wave_n[2]=k-Nnod
+        
+                k_tmp=LA.norm(wave_n, ord=2)
+                Esp=np.round(k_tmp)
+        
+                theta=np.random.uniform(0.0,2*PI,2)
+                psi=np.random.uniform(0.0,2*PI)
+        
+                phs1=np.exp(1j*theta[0])
+                phs2=np.exp(1j*theta[1])
+        
+                Amp=np.sqrt(2.0*np.exp(-2*Esp/3.0)/(3*PI))
+                Uhat[ndx,0]=Amp*np.cos(psi)*phs1
+                Uhat[ndx,1]=Amp*np.sin(psi)*phs2
+        
+                ndx +=1
+
+    u1_hat=Uhat[:,0].reshape(Nnod,Nnod,Nnod)
+    u2_hat=Uhat[:,1].reshape(Nnod,Nnod,Nnod)
+    u3_hat=Uhat[:,2].reshape(Nnod,Nnod,Nnod)
+
+    return u1_hat, u2_hat, u3_hat
+
+def gen_IC_vel1(Nnod, Kf):
     
-    u_w=np.zeros((sz,2),dtype=complex)
+    sz=Nnod**3
+
+    PI=np.pi
     
-    wave_n=np.array([0.0,0.0])
-    max_wave=int(res/2)
+    Uhat=np.zeros((sz,3),dtype=complex)
+    
+    wave_n=np.array([0.0,0.0,0.0])
+    max_wave=int(Nnod/2)
     ndx=0
     
-    for j in range(0,res):
-        for i in range(0,res):
+    for k in range(0,Nnod):
+        for j in range(0,Nnod):
+            for i in range(0,Nnod):
             
-            wave_n[0]=i
-            if i > max_wave:
-                wave_n[0]=i-res
-            wave_n[1]=j
-            if j > max_wave:
-                wave_n[1]=j-res
-            
-            k_tmp=LA.norm(wave_n, ord=2)
-#            Esp=np.round(k_tmp)
-            Esp=k_tmp
-            
-            theta=np.random.uniform(0.0,2*PI,2)
-            psi=np.random.uniform(0.0,2*PI)
-            
-            phs1=np.exp(1j*theta[0])
-            phs2=np.exp(1j*theta[1])
-            Amp=1.0/PI
-            
-            if Esp <= Kf:
-                A1=np.sqrt(Amp*Esp/Kf**3)
-                u_w[ndx,0]=A1*np.cos(psi)*phs1
-                u_w[ndx,1]=A1*np.sin(psi)*phs2
-            else:
-                A1=np.sqrt(Amp)*Kf/Esp**2
-                u_w[ndx,0]=A1*np.cos(psi)*phs1
-                u_w[ndx,1]=A1*np.sin(psi)*phs2
+                wave_n[0]=i
+                if i > max_wave:
+                    wave_n[0]=i-Nnod
+                wave_n[1]=j
+                if j > max_wave:
+                    wave_n[1]=j-Nnod
+                wave_n[2]=k
+                if k > max_wave:
+                    wave_n[2]=k-Nnod
                 
-            ndx +=1
+                k_tmp=LA.norm(wave_n, ord=2)
+    #            Esp=np.round(k_tmp)
+                Esp=k_tmp
+                
+                theta=np.random.uniform(0.0,2*PI,2)
+                psi=np.random.uniform(0.0,2*PI)
+                
+                phs1=np.exp(1j*theta[0])
+                phs2=np.exp(1j*theta[1])
+                Amp=1.0/PI
+                
+                if Esp <= Kf:
+                    A1=np.sqrt(Amp*Esp/Kf**3)
+                    Uhat[ndx,0]=A1*np.cos(psi)*phs1
+                    Uhat[ndx,1]=A1*np.sin(psi)*phs2
+                else:
+                    A1=np.sqrt(Amp)*Kf/Esp**2
+                    Uhat[ndx,0]=A1*np.cos(psi)*phs1
+                    Uhat[ndx,1]=A1*np.sin(psi)*phs2
+                    
+                ndx +=1
     
-    u1_w2=u_w[:,0].reshape(res,res)
-    u2_w2=u_w[:,1].reshape(res,res)
-    
-    
-    return u1_w2, u2_w2
+    u1_hat=Uhat[:,0].reshape(Nnod,Nnod,Nnod)
+    u2_hat=Uhat[:,1].reshape(Nnod,Nnod,Nnod)
+    u3_hat=Uhat[:,2].reshape(Nnod,Nnod,Nnod)
+
+    return u1_hat, u2_hat, u3_hat
 
 def get_vorticity(Nnod,V1hat,V2hat,kx,ky):
     
