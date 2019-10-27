@@ -30,7 +30,8 @@ def get_sphere_waven(res):
             if j > max_wave:
                 wave_n[1]=j-res
             
-            u_w[ndx]=LA.norm(wave_n, ord=2)
+#            u_w[ndx]=LA.norm(wave_n, ord=2)
+            u_w[ndx]=np.round(LA.norm(wave_n, ord=2))
                             
             ndx +=1
             
@@ -82,23 +83,23 @@ def get_stats_eng(uhat,vhat,nu,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc):
     
     Uhat_EC *= Diss/TKE_EngC
     
-    return TKE,Enst,eta,Diss,K_eta,int_lscale,mic_lscale,Re_l,Re_L,T_L,0.*Uhat_EC
+    return TKE,Enst,eta,Diss,K_eta,int_lscale,mic_lscale,Re_l,Re_L,T_L,Uhat_EC
 
 def deriv_(Vhat,K):
            
     divhat = - K * Vhat
     Nnod = divhat.shape[0]
-    diver_V = np.fft.ifft2(divhat)*(Nnod)**2
+    diver_V = np.fft.ifftn(divhat)*(Nnod)**2
     
     return diver_V
 
-def Moments_dVdX(sz,uhat,vhat,kx,ky):
+def Moments_dVdX(uhat,vhat,kx,ky):
     
     du1dx=deriv_(uhat,kx)
-    du1dx=du1dx.reshape(sz,1)
+    du1dx=np.real(du1dx)
     
     du2dy=deriv_(vhat,ky)
-    du2dy=du2dy.reshape(sz,1)
+    du2dy=np.real(du2dy)
     
     M1=np.array([])
     M2=np.array([])
@@ -115,4 +116,20 @@ def Moments_dVdX(sz,uhat,vhat,kx,ky):
     M1=np.append(M1,np.mean(du1dx**4)/std1**2)
     M2=np.append(M2,np.mean(du2dy**4)/std2**2)
     
-    return M1, M2  
+    return M1, M2 
+
+def Moments_Vor(Vor):
+    
+    Vor = np.real(Vor)
+        
+    M=np.array([])
+    
+    stdev=np.mean(Vor**2)
+    
+    M=np.append(M,stdev)
+
+    M=np.append(M,np.mean(Vor**3)/stdev**1.5)
+
+    M=np.append(M,np.mean(Vor**4)/stdev**2)
+    
+    return M   

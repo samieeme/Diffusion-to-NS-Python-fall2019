@@ -254,6 +254,19 @@ def dealiasing(cut_off, Nnod):
 
     return cutoff
     
+def check_div_free(sz,Uhat,Vhat,kx,ky):
+    
+    U = np.fft.ifftn(Uhat)*sz
+    U_p = U-np.mean(U)
+    Uhat = np.fft.fftn(U_p)/sz
+    
+    V = np.fft.ifftn(Vhat)*sz
+    V_p = V-np.mean(V)
+    Vhat = np.fft.fftn(V_p)/sz
+    
+    div = np.mean(np.real(np.fft.ifftn(-kx*Uhat-ky*Vhat)*sz))
+
+    return div, Uhat, Vhat
     
 def gen_IC_vel(res):
 
@@ -348,8 +361,7 @@ def gen_IC_vel1(res, Kf):
     
     return u1_w2, u2_w2
 
-def gen_IC_vel2(res, Kf):
-    sz=res**2
+def gen_IC_vel2(res):
 
     PI=np.pi
 
@@ -407,15 +419,13 @@ def gen_IC_vel2(res, Kf):
 
             ndx +=1
 
-   # u1_w2=u_w[:,0].reshape(res,res)
-   # u2_w2=u_w[:,1].reshape(res,res)
     return u_w, v_w
 
-def get_vorticity(Nnod,V1hat,V2hat,kx,ky):
+def get_vorticity(sz,V1hat,V2hat,kx,ky):
     
     divhat_x = - kx * V2hat
     divhat_y = - ky * V1hat
-    Vor = np.fft.ifft2(divhat_y-divhat_x)*(Nnod)**2
+    Vor = np.fft.ifftn(divhat_y-divhat_x)*sz
     return Vor
 
 def plot_Vel(X,Y,U,V,n,map_type):
@@ -423,15 +433,15 @@ def plot_Vel(X,Y,U,V,n,map_type):
 
     fig = plt.figure(figsize=(14,11))
     plt.subplot(2,2,1)
-    plt.contourf(X,Y,U,100,cmap=map_type)
-    plt.title('$u_1(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.contourf(X,Y,U.real,100,cmap=map_type)
+    plt.title('$u_1(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
     plt.subplot(2,2,2)
-    plt.contourf(X,Y,V,100,cmap=map_type)
-    plt.title('$u_2(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.contourf(X,Y,V.real,100,cmap=map_type)
+    plt.title('$u_2(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
@@ -441,8 +451,8 @@ def plot_Vel(X,Y,U,V,n,map_type):
 def plot_Vor(X,Y,Vor,n,icnt,map_type):
 
     fig = plt.figure(figsize=(6.5,5))
-    plt.contourf(X,Y,Vor,100,cmap=map_type)
-    plt.title('$\omega_z(\mathbf{x}),$ $t=$ '+str(n), fontsize=18)
+    plt.contourf(X,Y,Vor.real,100,cmap=map_type)
+    plt.title('$\omega_z(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
