@@ -8,9 +8,9 @@ Created on Tue Oct  8 10:57:08 2019
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
-#from matplotlib import rc
-#rc('font',**{'family':'serif','serif':['Helvetica']})
-#rc('text', usetex=True)
+from matplotlib import rc
+rc('font',**{'family':'serif','serif':['Helvetica']})
+rc('text', usetex=True)
 
 def forcef(x,y):
     return -4.0*np.sin(2.0*x)*np.cos(3.0*y)-9.0*np.sin(2.0*x)*np.cos(3.0*y)
@@ -312,54 +312,72 @@ def gen_IC_vel(res):
     return u1_w2, u2_w2
 
 def gen_IC_vel1(res, Kf):
-    
-    sz=res**2
 
     PI=np.pi
-    
-    u_w=np.zeros((sz,2),dtype=complex)
+
+    u_w=np.zeros((res,res),dtype=complex)
+    v_w=np.zeros((res,res),dtype=complex)
     
     wave_n=np.array([0.0,0.0])
     max_wave=int(res/2)
-    ndx=0
+
+    theta1=(np.random.uniform(0.0,2*PI,res))
+    theta2=(np.random.uniform(0.0,2*PI,res))    
+    theta3=(np.random.uniform(0.0,2*PI,res))
+    theta4=(np.random.uniform(0.0,2*PI,res))
+      
     
+    psi1=(np.random.uniform(0.0,PI,res))
+    psi2=(np.random.uniform(0.0,PI,res))
+
+    theta1[0]=0.0
+    theta2[0]=0.0
+    theta3[0]=0.0
+    theta4[0]=0.0
+
+    for i in range(1,res):
+        if i > max_wave:
+            theta1[i]=-theta1[res-i]
+            theta2[i]=-theta2[res-i]
+            theta3[i]=-theta3[res-i]
+            theta4[i]=-theta4[res-i]
+
+            psi1[i]=psi1[res-i]
+            psi2[i]=psi2[res-i]
+            
     for j in range(0,res):
         for i in range(0,res):
-            
+
             wave_n[0]=i
             if i > max_wave:
                 wave_n[0]=i-res
             wave_n[1]=j
             if j > max_wave:
                 wave_n[1]=j-res
-            
             k_tmp=LA.norm(wave_n, ord=2)
+#            if k_tmp == 0.0:
+#               k_tmp =0.0001
+#               
 #            Esp=np.round(k_tmp)
             Esp=k_tmp
+            if Esp == 0.0:
+               Esp = 0.0001
+               
+            phs1=np.exp(1j*(theta1[i]+theta2[j]))
+            phs2=np.exp(1j*(theta3[i]+theta4[j]))
             
-            theta=np.random.uniform(0.0,2*PI,2)
-            psi=np.random.uniform(0.0,2*PI)
-            
-            phs1=np.exp(1j*theta[0])
-            phs2=np.exp(1j*theta[1])
             Amp=1.0/PI
             
             if Esp <= Kf:
                 A1=np.sqrt(Amp*Esp/Kf**3)
-                u_w[ndx,0]=A1*np.cos(psi)*phs1
-                u_w[ndx,1]=A1*np.sin(psi)*phs2
+                u_w[i,j]=A1*np.cos(psi1[i]+psi2[j])*phs1
+                v_w[i,j]=A1*np.sin(psi1[i]+psi2[j])*phs2
             else:
                 A1=np.sqrt(Amp)*Kf/Esp**2
-                u_w[ndx,0]=A1*np.cos(psi)*phs1
-                u_w[ndx,1]=A1*np.sin(psi)*phs2
-                
-            ndx +=1
-    
-    u1_w2=u_w[:,0].reshape(res,res)
-    u2_w2=u_w[:,1].reshape(res,res)
-    
-    
-    return u1_w2, u2_w2
+                u_w[i,j]=A1*np.cos(psi1[i]+psi2[j])*phs1
+                v_w[i,j]=A1*np.sin(psi1[i]+psi2[j])*phs2
+
+    return u_w, v_w
 
 def gen_IC_vel2(res):
 
@@ -428,8 +446,7 @@ def get_vorticity(sz,V1hat,V2hat,kx,ky):
     Vor = np.fft.ifftn(divhat_y-divhat_x)*sz
     return Vor
 
-def plot_Vel(X,Y,U,V,n,map_type):
-
+def plot_Vel(X,Y,U,V,n,icnt,map_type):
 
     fig = plt.figure(figsize=(14,11))
     plt.subplot(2,2,1)
@@ -446,7 +463,12 @@ def plot_Vel(X,Y,U,V,n,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
-    plt.show()
+#    plt.show()
+
+    plt.savefig('Vel_T'+str(icnt)+'.png', dpi=600, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                metadata=None) 
     
 def plot_Vor(X,Y,Vor,n,icnt,map_type):
 
@@ -457,12 +479,12 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
-    plt.show()
+#    plt.show()
     
-#    plt.savefig('Out_T'+str(icnt)+'.pdf', dpi=None, facecolor='w', edgecolor='w',
-#                orientation='portrait', papertype=None, format=None,
-#                transparent=False, bbox_inches=None, pad_inches=0.1,
-#                metadata=None) 
+    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                metadata=None) 
     
     
     

@@ -14,18 +14,18 @@ from functions_stats import get_sphere_waven, get_stats_eng, Moments_dVdX, Momen
 
 #%%###################### Setting up parameters ###############################
 
-Nnod = 128
-visc = 0.005
+Nnod = 1024
+visc = 0.0001
 dt = 0.0001
 alpha = 1.0
 Kf = 2.0*2.0**0.5
 
 #Final simulation time and output time
 t_end = 20.0
-t_out_freq = 1
+t_out_freq = 0.1
 
 #Computing the cut-off frequency matrix for dealiasing
-cut_off = 1
+cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #%%############### Computing constant matrices and arrays #####################
@@ -44,7 +44,7 @@ K_sh,K_sh2,K_sh4 = get_sphere_waven(Nnod)
 
 Ntmax = int(t_end/dt)
 out_freq = int(t_out_freq/dt)
-iprnt_freq = int(out_freq/2)
+iprnt_freq = int(out_freq/5.)
 
 out = np.linspace(0,Ntmax,int(Ntmax/out_freq)+1,dtype=int)
 
@@ -56,9 +56,14 @@ sz_frc = ndx_frc.shape[0]
 
 #%%#################### Generating Initial Conditions #########################
 
-Uhat,Vhat = gen_IC_vel2(Nnod)
-#Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
+#Uhat,Vhat = gen_IC_vel2(Nnod)
+Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
 #Uhat,Vhat=gen_IC_vel(Nnod)
+
+np.savetxt('Uhat_IC.txt', Uhat, delimiter=',')
+np.savetxt('Vhat_IC.txt', Vhat, delimiter=',')
+#Uhat = np.genfromtxt('Uhat.txt', delimiter=',',dtype=complex)
+#Vhat = np.genfromtxt('Vhat.txt', delimiter=',',dtype=complex)
 
 div, Uhat, Vhat = check_div_free(sz,Uhat,Vhat,kx,ky)
 
@@ -71,19 +76,31 @@ Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
 
-plot_Vel(X,Y,U,V,0,'seismic')
+#plot_Vel(X,Y,U,V,0,1,'seismic')
 
-plot_Vor(X,Y,Vor,0.0,1,'seismic')
+#plot_Vor(X,Y,Vor,0.0,1,'seismic')
+
+S2_omega=np.array([])
+S3_omega=np.array([])
+S4_omega=np.array([])
+
+stats=np.array([])
+tmp=np.zeros((6,1))
 
 #M1,M2 = Moments_dVdX(Uhat,Vhat,kx,ky)
 M = Moments_Vor(Vor)
 
-print("---- mean(Div(U'_0)) = ", format(div, '.16f'), " ----", 
-      end='\n************************************************************************************\n')
-print("Variance omega_z:", format(M[0], '.6f'), 
-      "-- Skewness omega_z:", format(M[1], '.6f'), 
-      "-- Flatness omega_z:", format(M[2], '.3f'), 
-      sep=" ", end='\n************************************************************************************\n')
+S2_omega=np.append(S2_omega,M[0])
+S3_omega=np.append(S3_omega,M[1])
+S4_omega=np.append(S4_omega,M[2])
+
+#print(end='\n************************************************************************************\n')
+#print("---- mean(Div(U'_0)) = ", format(div, '.16f'), " ----", 
+#      end='\n************************************************************************************\n')
+#print("Variance omega_z:", format(M[0], '.6f'), 
+#      "-- Skewness omega_z:", format(M[1], '.6f'), 
+#      "-- Flatness omega_z:", format(M[2], '.3f'), 
+#      sep=" ", end='\n************************************************************************************\n')
 #print("Variance du/dx:", format(M1[0], '.6f'), 
 #      "-- Skewness du/dx:", format(M1[1], '.6f'), 
 #      "-- Flatness du/dx:", format(M1[2], '.3f'), 
@@ -95,13 +112,19 @@ print("Variance omega_z:", format(M[0], '.6f'),
 
 
 time = 0.0
-print("Time: ", format(time, '.2f'), 
-      "-- T.K.E.: ", format(TKE, '.6f'), 
-      "-- Diss.: ", format(Diss, '.6f'), 
-      "-- k_max*eta: ", format(Wmax/K_eta, '.2f'), 
-      "-- Re: ", format(Re, '.1f'), 
-      "-- Eddy-Turnover time: ", format(TKE, '.3f'), sep=" ", end='\n')
+#print("Time: ", format(time, '.2f'), 
+#      "-- T.K.E.: ", format(TKE, '.6f'), 
+#      "-- Diss.: ", format(Diss, '.6f'), 
+#      "-- k_max*eta: ", format(Wmax/K_eta, '.2f'), 
+#      "-- Re: ", format(Re, '.1f'), 
+#      "-- Eddy-Turnover time: ", format(T_L, '.3f'), sep=" ", end='\n')
 
+#print(format(time, '.2f'), 
+#      format(TKE, '.6f'), 
+#      format(Diss, '.6f'), 
+#      format(Wmax/K_eta, '.2f'), 
+#      format(Re, '.1f'), 
+#      format(T_L, '.3f'), sep=" ", end='\n')
 #%%########## Starting the time-stepping w/ Forward-Euler scheme ##############
 
 adv_velxx = U[:]*U[:]
@@ -131,12 +154,27 @@ TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
         Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
 
 time = dt
-print("Time:", format(time, '.4f'), 
-      "-- T.K.E.:", format(TKE, '.6f'), 
-      "-- Diss.:", format(Diss, '.6f'), 
-      "-- k_max*eta:", format(Wmax/K_eta, '.2f'), 
-      "-- Re:", format(Re, '.1f'), 
-      "-- Eddy-Turnover time:", format(TKE, '.3f'), sep=" ", end='\n')
+#print("Time:", format(time, '.4f'), 
+#      "-- T.K.E.:", format(TKE, '.6f'), 
+#      "-- Diss.:", format(Diss, '.6f'), 
+#      "-- k_max*eta:", format(Wmax/K_eta, '.2f'), 
+#      "-- Re:", format(Re, '.1f'), 
+#      "-- Eddy-Turnover time:", format(TKE, '.3f'), sep=" ", end='\n')
+#print(format(time, '.2f'), 
+#      format(TKE, '.6f'), 
+#      format(Diss, '.6f'), 
+#      format(Wmax/K_eta, '.2f'), 
+#      format(Re, '.1f'), 
+#      format(T_L, '.3f'), sep=" ", end='\n')
+
+tmp[0]=time
+tmp[1]=TKE
+tmp[2]=Diss
+tmp[3]=Wmax/K_eta
+tmp[4]=Re
+tmp[5]=T_L
+
+stats=np.append(stats,tmp)
 
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
@@ -177,13 +215,28 @@ for nt in range(2,Ntmax+1):
     TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
             Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
     if nt == iprnt:
-        print("Time:", format(time, '.4f'), 
-              "-- T.K.E.:", format(TKE, '.6f'), 
-              "-- Diss.:", format(Diss, '.6f'), 
-              "-- k_max*eta:", format(Wmax/K_eta, '.2f'), 
-              "-- Re: ", format(Re, '.1f'), 
-              "-- Eddy-Turnover time:", format(TKE, '.3f'), 
-              sep=" ", end='\n')
+#        print("Time:", format(time, '.4f'), 
+#              "-- T.K.E.:", format(TKE, '.6f'), 
+#              "-- Diss.:", format(Diss, '.6f'), 
+#              "-- k_max*eta:", format(Wmax/K_eta, '.2f'), 
+#              "-- Re: ", format(Re, '.1f'), 
+#              "-- Eddy-Turnover time:", format(T_L, '.3f'), 
+#              sep=" ", end='\n')
+#        print(format(time, '.2f'), 
+#              format(TKE, '.6f'),
+#              format(Diss, '.6f'),
+#              format(Wmax/K_eta, '.2f'),
+#              format(Re, '.1f'), 
+#              format(T_L, '.3f'), sep=" ", end='\n')
+        
+        tmp[0]=time
+        tmp[1]=TKE
+        tmp[2]=Diss
+        tmp[3]=Wmax/K_eta
+        tmp[4]=Re
+        tmp[5]=T_L
+        
+        stats=np.append(stats,tmp)
         
         iprnt += iprnt_freq
     
@@ -193,14 +246,28 @@ for nt in range(2,Ntmax+1):
     if nt == out[icnt]:               
         
         Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
-        plot_Vor(X,Y,Vor,time,icnt+1,'seismic')
+#        plot_Vor(X,Y,Vor,time,icnt+1,'seismic')
+        
+        np.savetxt('Uhat_'+str(icnt)+'.txt', Uhat, delimiter=',')
+        np.savetxt('Vhat_'+str(icnt)+'.txt', Vhat, delimiter=',')
+        
+        np.savetxt('Velhat_xx_old_'+str(icnt)+'.txt', adv_velxx_hat, delimiter=',')
+        np.savetxt('Velhat_xy_old_'+str(icnt)+'.txt', adv_velxy_hat, delimiter=',')
+        np.savetxt('Velhat_yy_old_'+str(icnt)+'.txt', adv_velyy_hat, delimiter=',')
+       
         
 #        M1,M2 = Moments_dVdX(Uhat,Vhat,kx,ky)
         M = Moments_Vor(Vor)
-        print("Variance omega_z:", format(M[0], '.6f'), 
-              "-- Skewness omega_z:", format(M[1], '.6f'), 
-              "-- Flatness omega_z:", format(M[2], '.3f'), 
-              sep=" ", end='\n************************************************************************************\n')
+        
+        S2_omega=np.append(S2_omega,M[0])
+        S3_omega=np.append(S3_omega,M[1])
+        S4_omega=np.append(S4_omega,M[2])
+        
+#        print(end='************************************************************************************\n')
+#        print("Variance omega_z:", format(M[0], '.6f'), 
+#              "-- Skewness omega_z:", format(M[1], '.6f'), 
+#              "-- Flatness omega_z:", format(M[2], '.3f'), 
+#              sep=" ", end='\n************************************************************************************\n')
 #        print("Variance du/dx:", format(M1[0], '.6f'), 
 #              "-- Skewness du/dx:", format(M1[1], '.6f'), 
 #              "-- Flatness du/dx:", format(M1[2], '.3f'), 
@@ -221,4 +288,12 @@ for nt in range(2,Ntmax+1):
     
     time += dt
 
-plot_Vel(X,Y,U,V,time,'seismic')
+#plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
+
+np.savetxt('S2_Omega.txt', S2_omega.T, delimiter=',')
+np.savetxt('S3_Omega.txt', S3_omega.T, delimiter=',')
+np.savetxt('S4_Omega.txt', S4_omega.T, delimiter=',')
+
+
+stats=stats.reshape(int(stats.size/6),6)
+np.savetxt('Stats.txt', stats, delimiter=',')
