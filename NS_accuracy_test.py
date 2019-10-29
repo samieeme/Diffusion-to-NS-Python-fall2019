@@ -38,13 +38,17 @@ ichk_cnt = int(1.0/(dt*chk_freq))
 ichk = ichk_cnt
 iout = 0
 
+#Selecting a method for velocity I.C.
+ic_mthd_in = sys.argv[8]
+ic_mthd = int(ic_mthd_in)
+
 #Computing the cut-off frequency matrix for dealiasing
 cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file
 f_inp = open('inps.txt', 'w')
-print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, 
+print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
       sep=" ", file = f_inp, flush=False)
 f_inp.close()
 
@@ -76,21 +80,24 @@ sz_frc = ndx_frc.shape[0]
 
 #%%#################### Generating Initial Conditions #########################
 
-#Uhat,Vhat = gen_IC_vel2(Nnod)
-Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
-#Uhat,Vhat=gen_IC_vel(Nnod)
+if ic_mthd == 0:
+#    Uhat,Vhat = gen_IC_vel2(Nnod)
+    Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
+#    Uhat,Vhat=gen_IC_vel(Nnod)
 
-np.savetxt('Uhat.csv', Uhat, delimiter=',')
-np.savetxt('Vhat.csv', Vhat, delimiter=',')
+    np.savetxt('Uhat.csv', Uhat, delimiter=',')
+    np.savetxt('Vhat.csv', Vhat, delimiter=',')
+    
+    os.system('mkdir Out_'+str(iout)+'_chk')
+    os.system('mv *.csv Out_'+str(iout)+'_chk')
 
-os.system('mkdir Out_'+str(iout)+'_chk')
-os.system('mv *.csv Out_'+str(iout)+'_chk')
+    
+else:
+    icpath=os.path.join(os.getcwd(),'Out_IC')
+    Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',',dtype=complex)
+    Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',',dtype=complex)
 
 iout += 1
-
-
-#Uhat = np.genfromtxt('Uhat.txt', delimiter=',',dtype=complex)
-#Vhat = np.genfromtxt('Vhat.txt', delimiter=',',dtype=complex)
 
 div, Uhat, Vhat = check_div_free(sz,Uhat,Vhat,kx,ky)
 
@@ -258,5 +265,5 @@ for nt in range(2,Ntmax+1):
 #plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
     
 os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
-os.system('mv *.txt Out_*_chk sim_N*')
+os.system('mv *.txt Out_* sim_N*')
 os.system('mv sim_N* ../')
