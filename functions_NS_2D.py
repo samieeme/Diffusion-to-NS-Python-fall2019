@@ -463,12 +463,12 @@ def plot_Vel(X,Y,U,V,n,icnt,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
-#    plt.show()
+    plt.show()
 
-    plt.savefig('Vel_T'+str(icnt)+'.png', dpi=600, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, bbox_inches=None, pad_inches=0.1,
-                metadata=None) 
+#    plt.savefig('Vel_T'+str(icnt)+'.png', dpi=600, facecolor='w', edgecolor='w',
+#                orientation='portrait', papertype=None, format=None,
+#                transparent=False, bbox_inches=None, pad_inches=0.1,
+#                metadata=None) 
     
 def plot_Vor(X,Y,Vor,n,icnt,map_type):
 
@@ -479,12 +479,12 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
-#    plt.show()
+    plt.show()
     
-    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, bbox_inches=None, pad_inches=0.1,
-                metadata=None) 
+#    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
+#                orientation='portrait', papertype=None, format=None,
+#                transparent=False, bbox_inches=None, pad_inches=0.1,
+#                metadata=None) 
     
     
     
