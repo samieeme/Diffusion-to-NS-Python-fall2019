@@ -5,28 +5,48 @@ Created on Fri Oct 11 14:02:26 2019
 
 import numpy as np
 from numpy import linalg as LA
+import sys
+import os
 
 from functions_NS_2D import derivatives, get_diffusion_opt, check_div_free
 from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2
 from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, dealiasing
 from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor
-from functions_stats import get_sphere_waven, get_stats_eng, Moments_dVdX, Moments_Vor
+from functions_stats import get_sphere_waven, get_stats_eng, Moments_Vor
 
 #%%###################### Setting up parameters ###############################
 
-Nnod = 1024
-visc = 0.0002
-dt = 0.0001
-alpha = 1.0
+Nnod_in = sys.argv[1]
+Nnod = int(Nnod_in)
+visc_in = sys.argv[2]
+visc = float(visc_in)
+dt_in = sys.argv[3]
+dt = float(dt_in)
+alpha_in = sys.argv[4]
+alpha = float(alpha_in)
 Kf = 2.0*2.0**0.5
 
 #Final simulation time and output time
-t_end = 1.0
-t_out_freq = 0.1
+t_end_in = sys.argv[5]
+t_end = float(t_end_in)
+t_out_freq_in = sys.argv[6]
+t_out_freq = float(t_out_freq_in)
+chk_freq_in = sys.argv[7]
+chk_freq = int(chk_freq_in)
+
+ichk_cnt = int(1.0/(dt*chk_freq))
+ichk = ichk_cnt
+iout = 0
 
 #Computing the cut-off frequency matrix for dealiasing
 cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
+
+#Write input variables on a file
+f_inp = open('inps.txt', 'w')
+print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, 
+      sep=" ", file = f_inp, flush=False)
+f_inp.close()
 
 #%%############### Computing constant matrices and arrays #####################
 
@@ -60,8 +80,15 @@ sz_frc = ndx_frc.shape[0]
 Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
 #Uhat,Vhat=gen_IC_vel(Nnod)
 
-#np.savetxt('Uhat_IC.txt', Uhat, delimiter=',')
-#np.savetxt('Vhat_IC.txt', Vhat, delimiter=',')
+np.savetxt('Uhat.csv', Uhat, delimiter=',')
+np.savetxt('Vhat.csv', Vhat, delimiter=',')
+
+os.system('mkdir Out_'+str(iout)+'_chk')
+os.system('mv *.csv Out_'+str(iout)+'_chk')
+
+iout += 1
+
+
 #Uhat = np.genfromtxt('Uhat.txt', delimiter=',',dtype=complex)
 #Vhat = np.genfromtxt('Vhat.txt', delimiter=',',dtype=complex)
 
@@ -199,17 +226,25 @@ for nt in range(2,Ntmax+1):
               format(M[0], '.5f'), 
               format(M[1], '.5f'), 
               format(M[2], '.3f'), sep=" ", end='\n', file = f2, flush=False)
-        f2.close()
-
-#        np.savetxt('Uhat_'+str(icnt)+'.txt', Uhat, delimiter=',')
-#        np.savetxt('Vhat_'+str(icnt)+'.txt', Vhat, delimiter=',')
-#        
-#        np.savetxt('Velhat_xx_old_'+str(icnt)+'.txt', adv_velxx_hat, delimiter=',')
-#        np.savetxt('Velhat_xy_old_'+str(icnt)+'.txt', adv_velxy_hat, delimiter=',')
-#        np.savetxt('Velhat_yy_old_'+str(icnt)+'.txt', adv_velyy_hat, delimiter=',')
-        
+        f2.close()      
        
         icnt += 1
+
+
+    if nt == ichk:
+
+        np.savetxt('Uhat.csv', Uhat, delimiter=',')
+        np.savetxt('Vhat.csv', Vhat, delimiter=',')        
+        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
+        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
+        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
+
+        os.system('mkdir Out_'+str(iout)+'_chk')
+        os.system('mv *.csv Out_'+str(iout)+'_chk')
+
+        iout += 1
+        ichk += ichk_cnt        
+        
                        
     adv_velxx = U[:]**2
     adv_velxy = U[:]*V[:]
@@ -221,3 +256,7 @@ for nt in range(2,Ntmax+1):
     time += dt
 
 #plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
+    
+os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
+os.system('mv *.txt Out_*_chk sim_N*')
+os.system('mv sim_N* ../')
