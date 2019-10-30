@@ -455,6 +455,55 @@ def gen_IC_vel2(res):
 
     return u_w, v_w
 
+def gen_IC_scalar(res,Ks):
+
+    PI=np.pi
+    
+    Phihat = np.zeros((res,res),dtype=complex)
+    
+    wave_n=np.array([0.0,0.0])
+    max_wave=int(res/2)
+    
+    thetax=np.random.uniform(0.0,2*PI,res)
+    thetay=np.random.uniform(0.0,2*PI,res) 
+    
+    thetax[0]=0.0
+    thetay[0]=0.0
+    
+    for i in range(1,res):
+        if i > max_wave:
+            thetax[i]=-thetax[res-i]
+            thetay[i]=-thetay[res-i]
+    
+    for j in range(0,res):
+        for i in range(0,res):
+            
+            wave_n[0]=i
+            if i > max_wave:
+                wave_n[0]=i-res
+            wave_n[1]=j
+            if j > max_wave:
+                wave_n[1]=j-res
+            
+            k_tmp=LA.norm(wave_n, ord=2)
+            Esp=np.round(k_tmp)
+            if Esp==Ks:
+                phs=np.exp(1j*thetax[i]+1j*thetay[j])
+                f_phi=0.5/(k_tmp*PI**0.5)
+                Phihat[i,j]=f_phi*phs
+    
+    Phi=np.real(np.fft.ifftn(Phihat)*res**2)
+    
+    pos=np.nonzero(Phi>0.0)
+    neg=np.nonzero(Phi<0.0)
+    
+    Phi[pos[0],pos[1]]=1.0
+    Phi[neg[0],neg[1]]=-1.0
+    
+    Phihat=np.fft.fftn(Phi)/res**2
+    
+    return Phihat
+
 def get_vorticity(sz,V1hat,V2hat,kx,ky):
     
     divhat_x = - kx * V2hat
@@ -494,7 +543,7 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
-
+    
     plt.show()
     
 #    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
