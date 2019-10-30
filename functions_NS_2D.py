@@ -201,7 +201,7 @@ def adv_FE(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den,af,ndx
 
     solution = operator_diff * vhat + dt*operator_adv/den
     
-    return solution, adv_vely_hat    
+    return solution   
     
 def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den,af,af_old,ndx_f,sz_f):
 
@@ -216,6 +216,22 @@ def adv_AB(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,d
     
     return solution 
     
+def adv_FE_phi(Nnod,vhat,adv_velx_hat,adv_vely_hat,dt,kx,ky,operator_diff,den):
+    
+    operator_adv = kx*adv_velx_hat+ky*adv_vely_hat
+
+    solution = operator_diff * vhat + dt*operator_adv/den
+    
+    return solution   
+    
+def adv_AB_phi(Nnod,vhat,adv_velx_hat,adv_vely_hat,adv_velx_hatold,adv_vely_hatold,dt,kx,ky,operator_diff,den):
+
+    operator_adv=kx*adv_velx_hat+ky*adv_vely_hat
+    operator_adv_old=kx*adv_velx_hatold+ky*adv_vely_hatold
+        
+    solution = operator_diff * vhat + dt*(1.5*operator_adv - 0.5*operator_adv_old)/den
+    
+    return solution 
     
 def diff_cont(Nnod,uhat,vhat,kx,ky,frac_R):
            
