@@ -9,7 +9,7 @@ import sys
 import os
 
 from functions_NS_2D import derivatives, get_diffusion_opt, check_div_free
-from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2
+from functions_NS_2D import gen_IC, gen_IC_vel1, gen_IC_vel2
 from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, dealiasing
 from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor
 from functions_stats import get_sphere_waven, get_stats_eng, Moments_Vor
@@ -51,6 +51,10 @@ f_inp = open('inps.txt', 'w')
 print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
       sep=" ", file = f_inp, flush=False)
 f_inp.close()
+#f_inp = open('inps.txt', 'w')
+#print(Nnod, visc, dt, alpha, t_end, t_out_freq, chk_freq,
+#      sep=" ", file = f_inp, flush=False)
+#f_inp.close()
 
 #%%############### Computing constant matrices and arrays #####################
 
@@ -82,8 +86,8 @@ sz_frc = ndx_frc.shape[0]
 
 if ic_mthd == 0:
 #    Uhat,Vhat = gen_IC_vel2(Nnod)
-    Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
-#    Uhat,Vhat=gen_IC_vel(Nnod)
+#    Uhat,Vhat = gen_IC_vel1(Nnod,Kf)
+    Uhat,Vhat=gen_IC(Nnod,Kf)
 
     np.savetxt('Uhat.csv', Uhat, delimiter=',')
     np.savetxt('Vhat.csv', Vhat, delimiter=',')
@@ -242,9 +246,9 @@ for nt in range(2,Ntmax+1):
 
         np.savetxt('Uhat.csv', Uhat, delimiter=',')
         np.savetxt('Vhat.csv', Vhat, delimiter=',')        
-        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
-        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
-        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
+#        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
+#        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
+#        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
 
         os.system('mkdir Out_'+str(iout)+'_chk')
         os.system('mv *.csv Out_'+str(iout)+'_chk')

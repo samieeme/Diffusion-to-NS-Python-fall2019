@@ -350,6 +350,9 @@ def gen_IC_vel1(res, Kf):
     theta2[0]=0.0
     theta3[0]=0.0
     theta4[0]=0.0
+    
+    psi1[0]=0.0
+    psi2[0]=0.0
 
     for i in range(1,res):
         if i > max_wave:
@@ -455,6 +458,59 @@ def gen_IC_vel2(res):
 
     return u_w, v_w
 
+def gen_IC(res,Kf):
+    
+    PI=np.pi
+
+    u_w=np.zeros((res**2,2),dtype=complex)
+    
+    wave_n=np.array([0.0,0.0])
+    max_wave=int(res/2)
+    ndx=0
+    
+    for j in range(0,res):
+        for i in range(0,res):
+            
+            wave_n[0]=i
+            if i > max_wave:
+                wave_n[0]=i-res
+            wave_n[1]=j
+            if j > max_wave:
+                wave_n[1]=j-res
+            
+            k_tmp=LA.norm(wave_n, ord=2)
+            Esp=np.round(k_tmp)
+            
+            theta=np.random.uniform(0.0,2*PI,2)
+            psi=np.random.uniform(0.0,2*PI)
+            
+            phs1=np.exp(1j*theta[0])
+            phs2=np.exp(1j*theta[1])
+            Amp=1.0/PI
+            
+            if Esp <= Kf:
+                A1=np.sqrt(Amp*Esp/Kf**3)
+                u_w[ndx,0]=A1*np.cos(psi)*phs1
+                u_w[ndx,1]=A1*np.sin(psi)*phs2
+            else:
+                A1=np.sqrt(Amp)*Kf/Esp**2
+                u_w[ndx,0]=A1*np.cos(psi)*phs1
+                u_w[ndx,1]=A1*np.sin(psi)*phs2
+                
+            ndx +=1
+    
+    u1_w=u_w[:,0].reshape(res,res)
+    u2_w=u_w[:,1].reshape(res,res)
+    
+    
+    u=np.real(np.fft.ifftn(u1_w))
+    v=np.real(np.fft.ifftn(u2_w))
+    
+    uhat=np.fft.fftn(u)
+    vhat=np.fft.fftn(v)
+    
+    return uhat,vhat
+    
 def gen_IC_scalar(res,Ks):
 
     PI=np.pi
