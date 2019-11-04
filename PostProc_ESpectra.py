@@ -40,7 +40,7 @@ PI=np.pi
 slope=-3.0
 
 #icpath=os.path.join(os.getcwd(),'Out_IC')
-icpath='/home/akhavans/Documents/Research/Scalar_Turbulence/tests/test4'
+icpath='/home/akhavans/Documents/Research/Scalar_Turbulence/tests/test7'
 os.chdir(icpath)
 inps = np.genfromtxt(icpath+'/'+'inps.txt', delimiter=' ')
 
@@ -58,7 +58,7 @@ X,Y = np.meshgrid(meshX,meshX)
 kxx,kyy,kx,ky = derivatives(res)
 K_sh,K_sh2,K_sh4 = get_sphere_waven(res)
 
-
+nu = float(inps[1])
 nfiles = int(inps[4]/inps[6])
 
 time = np.linspace(0.0,inps[4],nfiles+1)
@@ -67,6 +67,8 @@ Esp=np.zeros((sz,nfiles+2))
 
 Esp[:,nfiles+1] = K_sh.reshape(sz)
 Esp[0,1]=1.0
+
+Re_l = np.array([])
 
 for it in range(0,nfiles+1):
     
@@ -78,6 +80,7 @@ for it in range(0,nfiles+1):
     plot_Vor(X,Y,Vor,time[it],it,map_type)
     
     E_k = 0.5*((uhat*np.conj(uhat) + vhat*np.conj(vhat)).real)
+    Re_l=np.append(Re_l,(np.sum(K_sh2*E_k))**1.5/(2.0*nu*np.sum(K_sh4*E_k)))
     Esp[:,it] = E_k.reshape(sz)
 
 #%%############################################################################
@@ -112,10 +115,10 @@ W_rad=np.linspace(1,sz_Esp,sz_Esp)
 
 fig = plt.figure(figsize=(10,7.5))
  
-for i in range(0,nfiles+1):
+for i in range(17,nfiles+1,4):
     plt.loglog(W_rad,Energy_Spct[:,i], linewidth=2, label='$t=$'+str(time[i]))
 plt.loglog(W_rad[3:40],W_rad[3:40]**slope, 'k', linestyle='--',
-           linewidth=1.5, label='$\mathbf{\kappa}^{-3}$')
+           linewidth=4.5, label='$\mathbf{\kappa}^{-3}$')
 plt.title('Energy Spectrum', fontsize=30)
 plt.xlabel('$\mathbf{\kappa}$', fontsize=28)
 plt.ylabel('$E(\mathbf{\kappa},t)$', fontsize=28)
@@ -123,7 +126,7 @@ plt.legend(fontsize=18)
 plt.grid(which='both',axis='both',color='grey', linestyle='--', linewidth=.3)
 #plt.show()
 
-plt.savefig('EngSpecrum.png', dpi=300, facecolor='w', edgecolor='w',
+plt.savefig('EngSpectrum9.png', dpi=300, facecolor='w', edgecolor='w',
         orientation='portrait', papertype=None, format=None,
         transparent=False, bbox_inches=None, pad_inches=0.1,
         metadata=None) 
@@ -175,5 +178,22 @@ plt.savefig('FlowFeatures.png', dpi=300, facecolor='w', edgecolor='w',
         transparent=False, bbox_inches=None, pad_inches=0.1,
         metadata=None) 
 
+#%%############################################################################
+###############################################################################
+
+fig = plt.figure(figsize=(10,7.5))
+
+plt.plot(time,Re_l, marker='o', linewidth=2)
+
+plt.title('Micro-scale $Re$ number', fontsize=30)
+plt.xlabel('Time (sec)', fontsize=24)
+plt.ylabel('$Re_l$', fontsize=24)
+plt.grid(which='both',axis='both',color='grey', linestyle='--', linewidth=.3)
+#plt.show()
+
+plt.savefig('Re_l.png', dpi=300, facecolor='w', edgecolor='w',
+        orientation='portrait', papertype=None, format=None,
+        transparent=False, bbox_inches=None, pad_inches=0.1,
+        metadata=None) 
 
 

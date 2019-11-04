@@ -9,33 +9,33 @@ import sys
 import os
 
 from functions_NS_2D import derivatives, get_diffusion_opt, check_div_free
-from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2
+from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2, gen_IC_scalar
 from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, dealiasing
 from functions_NS_2D import adv_FE_phi, adv_AB_phi
-from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor
+from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor, plot_Phi
 from functions_stats import get_sphere_waven, get_stats_eng, Moments_Vor
 
 #%%###################### Setting up parameters ###############################
 
-Nnod_in = sys.argv[1]
-Nnod = int(Nnod_in)
-visc_in = sys.argv[2]
-visc = float(visc_in)
-schm_in = sys.argv[3]
-schm = float(schm_in)
-dt_in = sys.argv[4]
-dt = float(dt_in)
-alpha_in = sys.argv[5]
-alpha = float(alpha_in)
-Kf = 2.0*2.0**0.5
+#Nnod_in = sys.argv[1]
+Nnod = 512#int(Nnod_in)
+#visc_in = sys.argv[2]
+visc = 0.0001#float(visc_in)
+#schm_in = sys.argv[3]
+schm = 1.0#float(schm_in)
+#dt_in = sys.argv[4]
+dt = 0.0001#float(dt_in)
+#alpha_in = sys.argv[5]
+alpha = 1.0#float(alpha_in)
+Kf = 2.0**0.5
 
 #Final simulation time and output time
-t_end_in = sys.argv[6]
-t_end = float(t_end_in)
-t_out_freq_in = sys.argv[7]
-t_out_freq = float(t_out_freq_in)
-chk_freq_in = sys.argv[8]
-chk_freq = int(chk_freq_in)
+#t_end_in = sys.argv[6]
+t_end = 1.0#float(t_end_in)
+#t_out_freq_in = sys.argv[7]
+t_out_freq = 0.05#float(t_out_freq_in)
+#chk_freq_in = sys.argv[8]
+chk_freq = 20#int(chk_freq_in)
 
 ichk_cnt = int(1.0/(dt*chk_freq))
 ichk = ichk_cnt
@@ -46,12 +46,20 @@ cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file
-f_inp = open('inps.txt', 'w')
-print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
-      sep=" ", file = f_inp, flush=False)
-f_inp.close()
+#f_inp = open('inps.txt', 'w')
+#print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
+#      sep=" ", file = f_inp, flush=False)
+#f_inp.close()
+#f_inp = open('inps.txt', 'w')
+#print(Nnod, visc, dt, alpha, t_end, t_out_freq, chk_freq,
+#      sep=" ", file = f_inp, flush=False)
+#f_inp.close()
 
 #%%############### Computing constant matrices and arrays #####################
+
+meshX = np.linspace(0,2*np.pi,Nnod+1)
+meshX = np.delete(meshX,Nnod,None)
+X,Y = np.meshgrid(meshX,meshX)
 sz = Nnod**2
 
 #Computing derivatives' matrices
@@ -82,14 +90,15 @@ sz_frc = ndx_frc.shape[0]
 icpath = os.path.join(os.getcwd(),'Out_IC')
 Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',',dtype=complex)
 Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',',dtype=complex)
-phihat = np.genfromtxt(icpath+'/'+'Phihat.csv', delimiter=',',dtype=complex)
+#phihat = np.genfromtxt(icpath+'/'+'Phihat.csv', delimiter=',',dtype=complex)
+phihat = gen_IC_scalar(Nnod,8)
 
 iout += 1
 
 TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
         Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
 
-Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
+#Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
 
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
@@ -145,9 +154,11 @@ print(format(time, '.2f'),
       format(T_L, '.3f'), sep=" ", end='\n', file = f1, flush=False)
 f1.close()
 
-Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
-
-M = Moments_Vor(Vor)
+#Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
+#
+#M = Moments_Vor(Vor)
+phi_flc=phi.real-np.mean(phi.real)
+M = Moments_Vor(phi_flc)
 
 f2 = open('Vorticity_moments.txt', 'w')
 print(format(time, '.2f'), 
@@ -160,7 +171,9 @@ phihat = phihat_new[:]
 
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
-phi = np.fft.fftn(phihat)*sz
+phi = np.fft.ifftn(phihat)*sz
+
+plot_Phi(X,Y,phi/sz,time,0,'coolwarm')
 
 adv_velxx = U[:]**2
 adv_velxy = U[:]*V[:]
@@ -225,16 +238,19 @@ for nt in range(2,Ntmax+1):
     
     U = np.fft.ifftn(Uhat)*sz
     V = np.fft.ifftn(Vhat)*sz
-    phi = np.fft.fftn(phihat)*sz
+    phi = np.fft.ifftn(phihat)*sz
 
     if nt == out[icnt]:               
         
-        Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
+#        Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
 
 #        plot_Vor(X,Y,Vor,time,icnt+1,'seismic')
+        plot_Phi(X,Y,phi/sz,time,icnt+1,'seismic')
                
-        M = Moments_Vor(Vor)
-        
+#        M = Moments_Vor(Vor)
+        phi_flc=phi.real-np.mean(phi.real)
+        M = Moments_Vor(phi_flc)
+
         f2 = open('Vorticity_moments.txt', 'a')
         print(format(time, '.2f'), 
               format(M[0], '.5f'), 
@@ -250,11 +266,11 @@ for nt in range(2,Ntmax+1):
         np.savetxt('Uhat.csv', Uhat, delimiter=',')
         np.savetxt('Vhat.csv', Vhat, delimiter=',')
         np.savetxt('phihat.csv', phihat, delimiter=',')        
-        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
-        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
-        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
-        np.savetxt('phihat_x_old.csv', adv_phix_hat, delimiter=',')
-        np.savetxt('phihat_y_old.csv', adv_phiy_hat, delimiter=',')
+#        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
+#        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
+#        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
+#        np.savetxt('phihat_x_old.csv', adv_phix_hat, delimiter=',')
+#        np.savetxt('phihat_y_old.csv', adv_phiy_hat, delimiter=',')
 
         os.system('mkdir Out_'+str(iout)+'_chk')
         os.system('mv *.csv Out_'+str(iout)+'_chk')
@@ -279,6 +295,6 @@ for nt in range(2,Ntmax+1):
 
 #plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
     
-os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
-os.system('mv *.txt Out_* sim_N*')
-os.system('mv sim_N* ../')
+#os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
+#os.system('mv *.txt Out_* sim_N*')
+#os.system('mv sim_N* ../')
