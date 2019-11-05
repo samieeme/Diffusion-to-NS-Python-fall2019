@@ -8,7 +8,7 @@ from numpy import linalg as LA
 import sys
 import os
 
-from functions_NS_2D import derivatives, get_diffusion_opt, check_div_free
+from functions_NS_2D import derivatives, get_diffusion_opt
 from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2, gen_IC_scalar
 from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, dealiasing
 from functions_NS_2D import adv_FE_phi, adv_AB_phi, plot_Phi_Vor
@@ -49,16 +49,6 @@ iout = 0
 cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
 
-#Write input variables on a file
-f_inp = open('inps.txt', 'w')
-print(Nnod_in, visc_in, schm_in, dt_in, alpha_in, t_end_in, t_out_freq_in, 
-      chk_freq_in, sep=" ", file = f_inp, flush=False)
-f_inp.close()
-#f_inp = open('inps.txt', 'w')
-#print(Nnod, visc, dt, alpha, t_end, t_out_freq, chk_freq,
-#      sep=" ", file = f_inp, flush=False)
-#f_inp.close()
-
 #%%############### Computing constant matrices and arrays #####################
 
 meshX = np.linspace(0,2*np.pi,Nnod+1)
@@ -95,23 +85,35 @@ Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',', dtype=complex)
 Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',', dtype=complex)
 phihat = np.genfromtxt(icpath+'/'+'Phihat_'+str(Ks)+'.csv', delimiter=',', 
                        dtype=complex)
-#phihat = gen_IC_scalar(Nnod,Ks)
 
+pth = 'Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in
+dirpath = os.path.join(os.getcwd(), pth)
+os.mkdir(dirpath)
+os.chdir(dirpath)
+
+#Write input variables on a file
+f_inp = open('inps.txt', 'w')
+print(Nnod_in, visc_in, schm_in, dt_in, alpha_in, Ks_in, t_end_in, 
+      t_out_freq_in, chk_freq_in, sep=" ", file = f_inp, flush=False)
+f_inp.close()
 
 #write output on file
 np.savetxt('Uhat.csv', Uhat, delimiter=',')
 np.savetxt('Vhat.csv', Vhat, delimiter=',')
-np.savetxt('Phihat.csv', phihat, delimiter=',')        
+np.savetxt('Phihat.csv', phihat, delimiter=',')
+
+f_time = open('time', 'w')
+print(0, sep=" ", file = f_time, flush=False)
+f_time.close()
+         
 os.system('mkdir Out_0_chk')
-os.system('mv *.csv Out_0_chk')
+os.system('mv time *.csv Out_0_chk')
 
 
 iout += 1
 
 TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
         Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
-
-#Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
 
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
@@ -167,9 +169,6 @@ print(format(time, '.2f'),
       format(T_L, '.3f'), sep=" ", end='\n', file = f1, flush=False)
 f1.close()
 
-#Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
-#
-#M = Moments_Vor(Vor)
 phi_flc=phi.real-np.mean(phi.real)
 M = Moments_Vor(phi_flc)
 
@@ -177,16 +176,12 @@ f2 = open('Scalar_moments.txt', 'w')
 print(format(time, '.2f'), 
       format(M[0], '.5f'), 
       format(M[1], '.5f'), 
-      format(M[2], '.3f'), sep=" ", end='\n', file = f2, flush=False)
+      format(M[2], '.5f'), sep=" ", end='\n', file = f2, flush=False)
 f2.close()
 
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
 phi = np.fft.ifftn(phihat)*sz
-
-#plot_Phi(X,Y,phi,time,0,'coolwarm')
-#plot_Phi(X,Y,phi_flc,time,0,'coolwarm')
-#plot_Phi_Vor(X,Y,phi_flc,Vor,time,0,'coolwarm')
 
 adv_velxx = U[:]**2
 adv_velxy = U[:]*V[:]
@@ -253,21 +248,14 @@ for nt in range(2,Ntmax+1):
 
     if nt == out[icnt]:               
         
-#        Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
-
-#        plot_Vor(X,Y,Vor,time,icnt+1,'seismic')
         phi_flc=phi.real-np.mean(phi.real)
-#        plot_Phi(X,Y,phi_flc,time,icnt+1,'coolwarm')
-#        plot_Phi_Vor(X,Y,phi_flc,Vor,time,icnt+1,'coolwarm')
-               
-#        M = Moments_Vor(Vor)
         M = Moments_Vor(phi_flc)
 
         f2 = open('Scalar_moments.txt', 'a')
         print(format(time, '.2f'), 
               format(M[0], '.5f'), 
               format(M[1], '.5f'), 
-              format(M[2], '.3f'), sep=" ", end='\n', file = f2, flush=False)
+              format(M[2], '.5f'), sep=" ", end='\n', file = f2, flush=False)
         f2.close()      
        
         icnt += 1
@@ -278,10 +266,14 @@ for nt in range(2,Ntmax+1):
         #write output on file
         np.savetxt('Uhat.csv', Uhat, delimiter=',')
         np.savetxt('Vhat.csv', Vhat, delimiter=',')
-        np.savetxt('Phihat.csv', phihat, delimiter=',')        
+        np.savetxt('Phihat.csv', phihat, delimiter=',')
+
+        f_time = open('time', 'w')
+        print(format(time, '.3f'), sep=" ", file = f_time, flush=False)
+        f_time.close()        
 
         os.system('mkdir Out_'+str(iout)+'_chk')
-        os.system('mv *.csv Out_'+str(iout)+'_chk')
+        os.system('mv time *.csv Out_'+str(iout)+'_chk')
 
         iout += 1
         ichk += ichk_cnt        
@@ -300,9 +292,3 @@ for nt in range(2,Ntmax+1):
     adv_phiy_hatold = adv_phiy_hat[:]
     
     time += dt
-
-#plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
-    
-#os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
-#os.system('mv *.txt Out_* sim_N*')
-#os.system('mv sim_N* ../')
