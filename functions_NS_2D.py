@@ -178,7 +178,11 @@ def get_diffusion_opt(alpha,dt,nu,Nnod,kxx,kyy):
     
     identity = np.ones((Nnod,Nnod))
     
-    frac_L = (kxx**2+kyy**2)**(alpha)
+    if alpha == 1.0:
+        frac_L = kxx**2+kyy**2
+    else:
+        frac_L = (kxx**2+kyy**2)**alpha
+            
     
     den = identity+0.5*dt*nu*frac_L
     

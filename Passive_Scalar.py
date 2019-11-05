@@ -59,7 +59,7 @@ sz = Nnod**2
 #Computing derivatives' matrices
 kxx,kyy,kx,ky = derivatives(Nnod)
 
-operator_diff,den,frac_R = get_diffusion_opt(alpha,dt,visc,Nnod,kxx,kyy)
+operator_diff,den,frac_R = get_diffusion_opt(1.0,dt,visc,Nnod,kxx,kyy)
 
 operator_diff_phi,den_phi,tmp = get_diffusion_opt(alpha,dt,Dc,Nnod,kxx,kyy)
 del tmp                                                         
