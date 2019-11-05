@@ -595,28 +595,28 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
     
-    plt.show()
+#    plt.show()
     
-#    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
-#                orientation='portrait', papertype=None, format=None,
-#                transparent=False, bbox_inches=None, pad_inches=0.1,
-#                metadata=None)
+    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                metadata=None)
     
 def plot_Phi(X,Y,Phi,n,icnt,map_type):
 
     fig = plt.figure(figsize=(6.5,5))
     plt.contourf(X,Y,Phi.real,100,cmap=map_type)
-    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
+    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
     
-    plt.show()
+#    plt.show()
     
-#    plt.savefig('Vor_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
-#                orientation='portrait', papertype=None, format=None,
-#                transparent=False, bbox_inches=None, pad_inches=0.1,
-#                metadata=None)
+    plt.savefig('Phi_T'+str(icnt)+'.png', dpi=300, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, bbox_inches=None, pad_inches=0.1,
+                metadata=None)
     
         
 def plot_Phi_Vor(X,Y,Phi,Vor,n,icnt,map_type):

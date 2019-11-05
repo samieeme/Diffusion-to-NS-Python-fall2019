@@ -107,3 +107,11 @@ venv.bak/
 *.csv
 *.dat
 *.txt
+
+# output file
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.eps
+*.svg
