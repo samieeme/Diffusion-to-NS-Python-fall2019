@@ -11,31 +11,35 @@ import os
 from functions_NS_2D import derivatives, get_diffusion_opt, check_div_free
 from functions_NS_2D import gen_IC_vel, gen_IC_vel1, gen_IC_vel2, gen_IC_scalar
 from functions_NS_2D import adv_FE, adv_AB, diff_cont, corrector, dealiasing
-from functions_NS_2D import adv_FE_phi, adv_AB_phi
+from functions_NS_2D import adv_FE_phi, adv_AB_phi, plot_Phi_Vor
 from functions_NS_2D import get_vorticity, plot_Vel, plot_Vor, plot_Phi
 from functions_stats import get_sphere_waven, get_stats_eng, Moments_Vor
 
 #%%###################### Setting up parameters ###############################
 
-#Nnod_in = sys.argv[1]
-Nnod = 512#int(Nnod_in)
-#visc_in = sys.argv[2]
-visc = 0.0001#float(visc_in)
-#schm_in = sys.argv[3]
-schm = 1.0#float(schm_in)
-#dt_in = sys.argv[4]
-dt = 0.0001#float(dt_in)
-#alpha_in = sys.argv[5]
-alpha = 1.0#float(alpha_in)
+Nnod_in = sys.argv[1]
+Nnod = int(Nnod_in)
+visc_in = sys.argv[2]
+visc = float(visc_in)
+schm_in = sys.argv[3]
+schm = float(schm_in)
+dt_in = sys.argv[4]
+dt = float(dt_in)
+alpha_in = sys.argv[5]
+alpha = float(alpha_in)
+Ks_in = sys.argv[6]
+Ks = int(Ks_in)
+
 Kf = 2.0**0.5
+Dc = visc/schm
 
 #Final simulation time and output time
-#t_end_in = sys.argv[6]
-t_end = 1.0#float(t_end_in)
-#t_out_freq_in = sys.argv[7]
-t_out_freq = 0.05#float(t_out_freq_in)
-#chk_freq_in = sys.argv[8]
-chk_freq = 20#int(chk_freq_in)
+t_end_in = sys.argv[7]
+t_end = float(t_end_in)
+t_out_freq_in = sys.argv[8]
+t_out_freq = float(t_out_freq_in)
+chk_freq_in = sys.argv[9]
+chk_freq = int(chk_freq_in)
 
 ichk_cnt = int(1.0/(dt*chk_freq))
 ichk = ichk_cnt
@@ -46,10 +50,10 @@ cut_off = 2.0/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file
-#f_inp = open('inps.txt', 'w')
-#print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
-#      sep=" ", file = f_inp, flush=False)
-#f_inp.close()
+f_inp = open('inps.txt', 'w')
+print(Nnod_in, visc_in, schm_in, dt_in, alpha_in, t_end_in, t_out_freq_in, 
+      chk_freq_in, sep=" ", file = f_inp, flush=False)
+f_inp.close()
 #f_inp = open('inps.txt', 'w')
 #print(Nnod, visc, dt, alpha, t_end, t_out_freq, chk_freq,
 #      sep=" ", file = f_inp, flush=False)
@@ -67,9 +71,8 @@ kxx,kyy,kx,ky = derivatives(Nnod)
 
 operator_diff,den,frac_R = get_diffusion_opt(alpha,dt,visc,Nnod,kxx,kyy)
 
-operator_diff_phi,den_phi,frac_R_phi = get_diffusion_opt(alpha,dt,schm,
-                                                         Nnod,kxx,kyy)
-del frac_R_phi
+operator_diff_phi,den_phi,tmp = get_diffusion_opt(alpha,dt,Dc,Nnod,kxx,kyy)
+del tmp                                                         
 
 K_sh,K_sh2,K_sh4 = get_sphere_waven(Nnod)
 
@@ -88,10 +91,20 @@ sz_frc = ndx_frc.shape[0]
 #%%#################### Generating Initial Conditions #########################
 
 icpath = os.path.join(os.getcwd(),'Out_IC')
-Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',',dtype=complex)
-Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',',dtype=complex)
-#phihat = np.genfromtxt(icpath+'/'+'Phihat.csv', delimiter=',',dtype=complex)
-phihat = gen_IC_scalar(Nnod,8)
+Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',', dtype=complex)
+Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',', dtype=complex)
+phihat = np.genfromtxt(icpath+'/'+'Phihat_'+str(Ks)+'.csv', delimiter=',', 
+                       dtype=complex)
+#phihat = gen_IC_scalar(Nnod,Ks)
+
+
+#write output on file
+np.savetxt('Uhat.csv', Uhat, delimiter=',')
+np.savetxt('Vhat.csv', Vhat, delimiter=',')
+np.savetxt('Phihat.csv', phihat, delimiter=',')        
+os.system('mkdir Out_0_chk')
+os.system('mv *.csv Out_0_chk')
+
 
 iout += 1
 
@@ -128,7 +141,7 @@ adv_phiy_hatold = adv_phiy_hat[:]
 
 a_frc_old = a_frc
 
-phihat_new = adv_FE_phi(Nnod,phihat,adv_phix_hat,adv_phiy_hat,dt,kx,ky,
+phihat = adv_FE_phi(Nnod,phihat,adv_phix_hat,adv_phiy_hat,dt,kx,ky,
                         operator_diff_phi,den_phi)
 
 Uhat_tilde = adv_FE(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,dt,
@@ -160,20 +173,20 @@ f1.close()
 phi_flc=phi.real-np.mean(phi.real)
 M = Moments_Vor(phi_flc)
 
-f2 = open('Vorticity_moments.txt', 'w')
+f2 = open('Scalar_moments.txt', 'w')
 print(format(time, '.2f'), 
       format(M[0], '.5f'), 
       format(M[1], '.5f'), 
       format(M[2], '.3f'), sep=" ", end='\n', file = f2, flush=False)
 f2.close()
 
-phihat = phihat_new[:]
-
 U = np.fft.ifftn(Uhat)*sz
 V = np.fft.ifftn(Vhat)*sz
 phi = np.fft.ifftn(phihat)*sz
 
-plot_Phi(X,Y,phi/sz,time,0,'coolwarm')
+#plot_Phi(X,Y,phi,time,0,'coolwarm')
+#plot_Phi(X,Y,phi_flc,time,0,'coolwarm')
+#plot_Phi_Vor(X,Y,phi_flc,Vor,time,0,'coolwarm')
 
 adv_velxx = U[:]**2
 adv_velxy = U[:]*V[:]
@@ -201,7 +214,7 @@ for nt in range(2,Ntmax+1):
     adv_phix_hat = (np.fft.fftn(adv_phix)/sz)*c_off
     adv_phiy_hat = (np.fft.fftn(adv_phiy)/sz)*c_off
 
-    phihat_new = adv_AB_phi(Nnod,phihat,adv_phix_hat,adv_phiy_hat,
+    phihat = adv_AB_phi(Nnod,phihat,adv_phix_hat,adv_phiy_hat,
                             adv_phix_hatold,adv_phiy_hatold,dt,kx,ky,
                             operator_diff_phi,den_phi)    
     Uhat_tilde = adv_AB(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,
@@ -234,8 +247,6 @@ for nt in range(2,Ntmax+1):
         
         iprnt += iprnt_freq
     
-    phihat = phihat_new[:]
-    
     U = np.fft.ifftn(Uhat)*sz
     V = np.fft.ifftn(Vhat)*sz
     phi = np.fft.ifftn(phihat)*sz
@@ -245,13 +256,14 @@ for nt in range(2,Ntmax+1):
 #        Vor = get_vorticity(sz,Uhat,Vhat,kx,ky)
 
 #        plot_Vor(X,Y,Vor,time,icnt+1,'seismic')
-        plot_Phi(X,Y,phi/sz,time,icnt+1,'seismic')
+        phi_flc=phi.real-np.mean(phi.real)
+#        plot_Phi(X,Y,phi_flc,time,icnt+1,'coolwarm')
+#        plot_Phi_Vor(X,Y,phi_flc,Vor,time,icnt+1,'coolwarm')
                
 #        M = Moments_Vor(Vor)
-        phi_flc=phi.real-np.mean(phi.real)
         M = Moments_Vor(phi_flc)
 
-        f2 = open('Vorticity_moments.txt', 'a')
+        f2 = open('Scalar_moments.txt', 'a')
         print(format(time, '.2f'), 
               format(M[0], '.5f'), 
               format(M[1], '.5f'), 
@@ -262,15 +274,11 @@ for nt in range(2,Ntmax+1):
 
 
     if nt == ichk:
-
+        
+        #write output on file
         np.savetxt('Uhat.csv', Uhat, delimiter=',')
         np.savetxt('Vhat.csv', Vhat, delimiter=',')
-        np.savetxt('phihat.csv', phihat, delimiter=',')        
-#        np.savetxt('Velhat_xx_old.csv', adv_velxx_hat, delimiter=',')
-#        np.savetxt('Velhat_xy_old.csv', adv_velxy_hat, delimiter=',')
-#        np.savetxt('Velhat_yy_old.csv', adv_velyy_hat, delimiter=',')
-#        np.savetxt('phihat_x_old.csv', adv_phix_hat, delimiter=',')
-#        np.savetxt('phihat_y_old.csv', adv_phiy_hat, delimiter=',')
+        np.savetxt('Phihat.csv', phihat, delimiter=',')        
 
         os.system('mkdir Out_'+str(iout)+'_chk')
         os.system('mv *.csv Out_'+str(iout)+'_chk')

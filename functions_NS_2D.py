@@ -520,17 +520,6 @@ def gen_IC_scalar(res,Ks):
     wave_n=np.array([0.0,0.0])
     max_wave=int(res/2)
     
-    thetax=np.random.uniform(0.0,2*PI,res)
-    thetay=np.random.uniform(0.0,2*PI,res) 
-    
-    thetax[0]=0.0
-    thetay[0]=0.0
-    
-    for i in range(1,res):
-        if i > max_wave:
-            thetax[i]=-thetax[res-i]
-            thetay[i]=-thetay[res-i]
-    
     for j in range(0,res):
         for i in range(0,res):
             
@@ -543,12 +532,14 @@ def gen_IC_scalar(res,Ks):
             
             k_tmp=LA.norm(wave_n, ord=2)
             Esp=np.round(k_tmp)
+            
             if Esp==Ks:
-                phs=np.exp(1j*thetax[i]+1j*thetay[j])
+                theta=np.random.uniform(0.0,2*PI)
+                phs=np.exp(1j*theta)
                 f_phi=0.5/(k_tmp*PI**0.5)
                 Phihat[i,j]=f_phi*phs
     
-    Phi=np.real(np.fft.ifftn(Phihat)*res**2)
+    Phi=np.real(np.fft.ifftn(Phihat))
     
     pos=np.nonzero(Phi>0.0)
     neg=np.nonzero(Phi<0.0)
@@ -556,7 +547,7 @@ def gen_IC_scalar(res,Ks):
     Phi[pos[0],pos[1]]=1.0
     Phi[neg[0],neg[1]]=-1.0
     
-    Phihat=np.fft.fftn(Phi)
+    Phihat=np.fft.fftn(Phi)/res**2
     
     return Phihat
 
@@ -611,7 +602,7 @@ def plot_Phi(X,Y,Phi,n,icnt,map_type):
 
     fig = plt.figure(figsize=(6.5,5))
     plt.contourf(X,Y,Phi.real,100,cmap=map_type)
-    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
+    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
@@ -623,9 +614,25 @@ def plot_Phi(X,Y,Phi,n,icnt,map_type):
 #                transparent=False, bbox_inches=None, pad_inches=0.1,
 #                metadata=None)
     
-    
-    
-    
+        
+def plot_Phi_Vor(X,Y,Phi,Vor,n,icnt,map_type):
+
+    fig = plt.figure(figsize=(14,11))
+    plt.subplot(2,2,1)
+    plt.contourf(X,Y,Phi,100,cmap=map_type)
+    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
+    plt.xlabel('$x_1$', fontsize=15)
+    plt.ylabel('$x_2$', fontsize=15)
+    plt.colorbar()
+
+    plt.subplot(2,2,2)
+    plt.contourf(X,Y,Vor.real,100,cmap=map_type)
+    plt.title('$\omega_z(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
+    plt.xlabel('$x_1$', fontsize=15)
+    plt.ylabel('$x_2$', fontsize=15)
+    plt.colorbar()
+
+    plt.show()    
     
     
     
