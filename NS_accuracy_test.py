@@ -43,7 +43,7 @@ ic_mthd_in = sys.argv[8]
 ic_mthd = int(ic_mthd_in)
 
 #Computing the cut-off frequency matrix for dealiasing
-cut_off = 2.0/3.0
+cut_off = 2.0**0.5/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file

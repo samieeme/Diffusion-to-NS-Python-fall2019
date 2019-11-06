@@ -46,7 +46,7 @@ ichk = ichk_cnt
 iout = 0
 
 #Computing the cut-off frequency matrix for dealiasing
-cut_off = 2.0/3.0
+cut_off = 2.0**0.5/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #%%############### Computing constant matrices and arrays #####################
