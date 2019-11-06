@@ -52,7 +52,7 @@ time = np.linspace(0.0,inps[6],nfiles+1)
 
 counter = 0
 
-for it in range(0,nfiles+1,5):
+for it in range(0,nfiles+1):
     
     tmp_pth = 'Out_'+str(it)+'_chk'
     fpath = os.path.join(dirpath, tmp_pth)

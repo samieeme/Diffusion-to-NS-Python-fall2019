@@ -46,7 +46,7 @@ ichk = ichk_cnt
 iout = 0
 
 #Computing the cut-off frequency matrix for dealiasing
-cut_off = 2.0**0.5/3.0
+cut_off = 0.6#2.0**0.5/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #%%############### Computing constant matrices and arrays #####################
@@ -86,6 +86,10 @@ Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',', dtype=complex)
 phihat = np.genfromtxt(icpath+'/'+'Phihat_'+str(Ks)+'.csv', delimiter=',', 
                        dtype=complex)
 
+Uhat *= c_off
+Vhat *= c_off
+#phihat *= c_off
+    
 pth = 'Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in
 dirpath = os.path.join(os.getcwd(), pth)
 os.mkdir(dirpath)
@@ -128,12 +132,12 @@ adv_velyy = V[:]*V[:]
 adv_phix = U[:]*phi[:]
 adv_phiy = V[:]*phi[:] 
 
-adv_velxx_hat = (np.fft.fftn(adv_velxx)/sz)*c_off
-adv_velxy_hat = (np.fft.fftn(adv_velxy)/sz)*c_off
-adv_velyy_hat = (np.fft.fftn(adv_velyy)/sz)*c_off
+adv_velxx_hat = np.fft.fftn(adv_velxx)/sz
+adv_velxy_hat = np.fft.fftn(adv_velxy)/sz
+adv_velyy_hat = np.fft.fftn(adv_velyy)/sz
 
-adv_phix_hat = (np.fft.fftn(adv_phix)/sz)*c_off
-adv_phiy_hat = (np.fft.fftn(adv_phiy)/sz)*c_off
+adv_phix_hat = np.fft.fftn(adv_phix)/sz
+adv_phiy_hat = np.fft.fftn(adv_phiy)/sz
         
 adv_velxx_hatold = adv_velxx_hat[:]
 adv_velxy_hatold = adv_velxy_hat[:]
@@ -155,6 +159,10 @@ phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde,kx,ky,frac_R)
 
 Uhat,Vhat = corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky)
 
+Uhat *= c_off
+Vhat *= c_off
+phihat *= c_off
+    
 TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
         Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
 
@@ -202,12 +210,12 @@ iprnt = iprnt_freq
 
 for nt in range(2,Ntmax+1):
 
-    adv_velxx_hat = (np.fft.fftn(adv_velxx)/sz)*c_off
-    adv_velxy_hat = (np.fft.fftn(adv_velxy)/sz)*c_off
-    adv_velyy_hat = (np.fft.fftn(adv_velyy)/sz)*c_off
+    adv_velxx_hat = np.fft.fftn(adv_velxx)/sz
+    adv_velxy_hat = np.fft.fftn(adv_velxy)/sz
+    adv_velyy_hat = np.fft.fftn(adv_velyy)/sz
 
-    adv_phix_hat = (np.fft.fftn(adv_phix)/sz)*c_off
-    adv_phiy_hat = (np.fft.fftn(adv_phiy)/sz)*c_off
+    adv_phix_hat = np.fft.fftn(adv_phix)/sz
+    adv_phiy_hat = np.fft.fftn(adv_phiy)/sz
 
     phihat = adv_AB_phi(Nnod,phihat,adv_phix_hat,adv_phiy_hat,
                             adv_phix_hatold,adv_phiy_hatold,dt,kx,ky,
@@ -222,11 +230,17 @@ for nt in range(2,Ntmax+1):
     phat = diff_cont(Nnod,Uhat_tilde,Vhat_tilde,kx,ky,frac_R)
 
     Uhat,Vhat = corrector(Nnod,Uhat_tilde,Vhat_tilde,phat,dt,kx,ky)
+    
+    Uhat *= c_off
+    Vhat *= c_off
+    phihat *= c_off
 
     a_frc_old = a_frc[:]
     
     TKE,Enst,eta,Diss,K_eta,int_l,mic_l,Re_l,Re,T_L,a_frc = get_stats_eng(
             Uhat,Vhat,visc,K_sh,K_sh2,K_sh4,ndx_frc,sz_frc)
+    
+    
     
     if nt == iprnt:
 
