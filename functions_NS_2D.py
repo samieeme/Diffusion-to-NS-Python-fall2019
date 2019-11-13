@@ -590,7 +590,7 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
 
     fig = plt.figure(figsize=(6.5,5))
     plt.contourf(X,Y,Vor.real,100,cmap=map_type)
-    plt.title('$\omega_z(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
+    plt.title('$\zeta(\mathbf{x})=\\frac{\partial u_1^{\prime}}{\partial x_2} - \\frac{\partial u_2^{\prime}}{\partial x_1},$    $t=$ '+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
@@ -602,11 +602,12 @@ def plot_Vor(X,Y,Vor,n,icnt,map_type):
                 transparent=False, bbox_inches=None, pad_inches=0.1,
                 metadata=None)
     
-def plot_Phi(X,Y,Phi,n,icnt,map_type):
+def plot_Phi(X,Y,Phi,n,icnt,map_type,alpha):
 
     fig = plt.figure(figsize=(6.5,5))
     plt.contourf(X,Y,Phi.real,100,cmap=map_type)
-    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.1f'), fontsize=18)
+    plt.title('$\phi^{\prime}(\mathbf{x}),$ $\\alpha=$ '+format(alpha, '.1f')+
+              ' --- $t=$ '+format(n, '.1f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
@@ -624,14 +625,14 @@ def plot_Phi_Vor(X,Y,Phi,Vor,n,icnt,map_type):
     fig = plt.figure(figsize=(14,11))
     plt.subplot(2,2,1)
     plt.contourf(X,Y,Phi,100,cmap=map_type)
-    plt.title('$\phi(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
+    plt.title('$\phi^{\prime}(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
 
     plt.subplot(2,2,2)
     plt.contourf(X,Y,Vor.real,100,cmap=map_type)
-    plt.title('$\omega_z(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
+    plt.title('$\omega^{\prime}_z(\mathbf{x}),$ $t=$'+format(n, '.3f'), fontsize=18)
     plt.xlabel('$x_1$', fontsize=15)
     plt.ylabel('$x_2$', fontsize=15)
     plt.colorbar()
