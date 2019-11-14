@@ -24,7 +24,8 @@ dt_in = sys.argv[3]
 dt = float(dt_in)
 alpha_in = sys.argv[4]
 alpha = float(alpha_in)
-Kf = 2.0*2.0**0.5
+Kf_in = sys.argv[9]
+Kf = float(Kf_in)#2.0*2.0**0.5
 
 #Final simulation time and output time
 t_end_in = sys.argv[5]
@@ -43,17 +44,18 @@ ic_mthd_in = sys.argv[8]
 ic_mthd = int(ic_mthd_in)
 
 #Computing the cut-off frequency matrix for dealiasing
-cut_off = 2.0**0.5/3.0
+cutoff_in = sys.argv[10]
+cut_off = float(cutoff_in)#2.0**0.5/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file
-pth = 'sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_Tend'+t_end_in
+pth = 'sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_Tend'+t_end_in+'_Kf'+Kf_in+'_cut_off'+cutoff_in
 dirpath = os.path.join(os.getcwd(), pth)
 os.mkdir(dirpath)
 os.chdir(dirpath)
 
 f_inp = open('inps.txt', 'w')
-print(Nnod_in, visc_in, dt_in, t_end_in, t_out_freq_in, chk_freq_in,
+print(Nnod_in, visc_in, dt_in, t_end_in, t_out_freq_in, chk_freq_in, Kf_in, cutoff_in,
       sep=" ", file = f_inp, flush=False)
 f_inp.close()
 #f_inp = open('inps.txt', 'w')
