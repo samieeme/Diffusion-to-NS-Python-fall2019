@@ -47,8 +47,13 @@ cut_off = 2.0**0.5/3.0
 c_off = dealiasing(cut_off,Nnod)
 
 #Write input variables on a file
+pth = 'sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_Tend'+t_end_in
+dirpath = os.path.join(os.getcwd(), pth)
+os.mkdir(dirpath)
+os.chdir(dirpath)
+
 f_inp = open('inps.txt', 'w')
-print(Nnod_in, visc_in, dt_in, alpha_in, t_end_in, t_out_freq_in, chk_freq_in,
+print(Nnod_in, visc_in, dt_in, t_end_in, t_out_freq_in, chk_freq_in,
       sep=" ", file = f_inp, flush=False)
 f_inp.close()
 #f_inp = open('inps.txt', 'w')
@@ -268,6 +273,4 @@ for nt in range(2,Ntmax+1):
 
 #plot_Vel(X,Y,U,V,time,icnt+1,'seismic')
     
-os.system('mkdir sim_N'+Nnod_in+'_nu'+visc_in+'_dt'+dt_in+'_alpha'+alpha_in)
-os.system('mv *.txt Out_* sim_N*')
-os.system('mv sim_N* ../')
+os.chdir('../')
