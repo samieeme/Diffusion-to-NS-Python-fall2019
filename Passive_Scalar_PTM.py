@@ -73,11 +73,11 @@ K_sh,K_sh2,K_sh4 = get_sphere_waven(Nnod)
 
 Ntmax = int(t_end/dt)
 out_freq = int(t_out_freq/dt)
-iprnt_freq = int(out_freq/5.)
+iprnt_freq = int(out_freq)
 
 out = np.linspace(0,Ntmax,int(Ntmax/out_freq)+1,dtype=int)
 
-Wmax = Nnod*(2**0.5)/3.0
+Wmax = Nnod*cut_off
 
 tmp = np.nonzero(K_sh <= Kf)
 ndx_frc = np.array([tmp[0][1::],tmp[1][1::]]).T
