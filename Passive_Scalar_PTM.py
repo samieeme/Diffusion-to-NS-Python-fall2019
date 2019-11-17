@@ -154,9 +154,9 @@ adv_velyy_hatold = adv_velyy_hat
 
 a_frc_old = a_frc
 
-Pt_old = Pt
-Pt = Particle_Tracking(Pt_old,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
-MSD += ((Pt[:,0]-Pt_old[:,0])**2 + (Pt[:,1]-Pt_old[:,1])**2)**0.5
+Pt, dSqrd = Particle_Tracking(Pt,U.real,V.real,x2,Nnod,
+                              dx,L,dt,Diff,2.0*alpha,0.0)  
+MSD += dSqrd
 
 Uhat_tilde = adv_FE(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,dt,
                     kx,ky,operator_diff,den,a_frc[:,0],ndx_frc,sz_frc)
@@ -199,9 +199,9 @@ for nt in range(2,Ntmax+1):
     adv_velxy_hat = np.fft.fftn(adv_velxy)/sz
     adv_velyy_hat = np.fft.fftn(adv_velyy)/sz
 
-    Pt_old = Pt
-    Pt = Particle_Tracking(Pt_old,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
-    MSD += ((Pt[:,0]-Pt_old[:,0])**2 + (Pt[:,1]-Pt_old[:,1])**2)**0.5
+    Pt, dSqrd = Particle_Tracking(Pt,U.real,V.real,x2,Nnod,
+                              dx,L,dt,Diff,2.0*alpha,0.0)  
+    MSD += dSqrd
 
     Uhat_tilde = adv_AB(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,
                         adv_velxy_hatold,dt,kx,ky,operator_diff,den,a_frc[:,0],
@@ -226,11 +226,11 @@ for nt in range(2,Ntmax+1):
     if nt == iprnt:
 
         f1 = open('FlowFeatures.txt', 'a')
-        print(format(time, '.4f'), 
+        print(format(time, 'g'), 
               format(TKE, '.6f'),
               format(Diss, '.6f'),
               format(Wmax/K_eta, '.2f'),
-              format(np.mean(MSD), '.8f'), 
+              format(np.mean(MSD), '.15f'), 
               sep=" ", end='\n', file = f1, flush=False)
         f1.close()
 

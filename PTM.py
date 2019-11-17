@@ -143,10 +143,13 @@ def Particle_Tracking(Pt,U,V,x,res,dx,L,dt,Diff,alpha,beta):
     x1_pr=Pt[:,0]+0.5*dt*(u1+u1_pr)+Z1
     x2_pr=Pt[:,1]+0.5*dt*(u2+u2_pr)+Z2
     
+    dMSD = (x1_pr-Pt[:,0])**2 + (x2_pr-Pt[:,1])**2
+    
     Pt[:,0]=pos_adjust_v(x1_pr,L)
     Pt[:,1]=pos_adjust_v(x2_pr,L)
         
     endtime = time.process_time()
     print(endtime - starttime)
     
-    return Pt 
+    
+    return Pt, dMSD 
