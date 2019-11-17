@@ -48,7 +48,7 @@ iout = 0
 
 #Computing the cut-off frequency matrix for dealiasing
 cutoff_in = sys.argv[10]
-cut_off = float(cutoff_in)#2.0**0.5/3.0
+cut_off = float(cutoff_in)
 c_off = dealiasing(cut_off,Nnod)
 
 Kf_in = sys.argv[11]
@@ -155,7 +155,7 @@ adv_velyy_hatold = adv_velyy_hat
 a_frc_old = a_frc
 
 Pt_old = Pt
-Pt = Particle_Tracking(Pt,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
+Pt = Particle_Tracking(Pt_old,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
 MSD += ((Pt[:,0]-Pt_old[:,0])**2 + (Pt[:,1]-Pt_old[:,1])**2)**0.5
 
 Uhat_tilde = adv_FE(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,dt,
@@ -200,7 +200,7 @@ for nt in range(2,Ntmax+1):
     adv_velyy_hat = np.fft.fftn(adv_velyy)/sz
 
     Pt_old = Pt
-    Pt = Particle_Tracking(Pt,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
+    Pt = Particle_Tracking(Pt_old,U.real,V.real,x2,Nnod,dx,L,dt,Diff,2.0*alpha,0.0)  
     MSD += ((Pt[:,0]-Pt_old[:,0])**2 + (Pt[:,1]-Pt_old[:,1])**2)**0.5
 
     Uhat_tilde = adv_AB(Nnod,Uhat,adv_velxx_hat,adv_velxy_hat,adv_velxx_hatold,
