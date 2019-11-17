@@ -244,7 +244,7 @@ for nt in range(2,Ntmax+1):
     if nt == ichk:        
         
         f_time = open('time', 'a')
-        print(time, '.3f', sep=" ", end='\n', file = f_time, flush=False)
+        print(format(time, 'g'), sep=" ", end='\n', file = f_time, flush=False)
         f_time.close()
                
         np.savetxt('Pt_'+str(iout)+'.txt', Pt, delimiter=',')

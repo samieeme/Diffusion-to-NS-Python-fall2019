@@ -106,7 +106,7 @@ def Particle_Tracking(Pt,U,V,x,res,dx,L,dt,Diff,alpha,beta):
     Vper=np.zeros((res2,res2))
     
     #velocity interpolatin
-    starttime = time.process_time()    
+#    starttime = time.process_time()    
     Uper=U_periodic(U,Uper,res)
     U_interp=U_intp(Uper,U_interp,res2)
     f_u=interpolate.RectBivariateSpline(x, x, U_interp, kx=5, ky=5)
@@ -115,8 +115,8 @@ def Particle_Tracking(Pt,U,V,x,res,dx,L,dt,Diff,alpha,beta):
     V_interp=U_intp(Vper,V_interp,res2)
     f_v=interpolate.RectBivariateSpline(x, x, V_interp, kx=5, ky=5)
 
-    endtime = time.process_time()
-    print(endtime - starttime)
+#    endtime = time.process_time()
+#    print(endtime - starttime)
     
     Np=Pt.shape[0]
     #noise generation for paricles
@@ -126,7 +126,7 @@ def Particle_Tracking(Pt,U,V,x,res,dx,L,dt,Diff,alpha,beta):
     Z1=Diff*r*np.cos(ang)
     Z2=Diff*r*np.sin(ang)
     
-    starttime = time.process_time()
+#    starttime = time.process_time()
     #solving for the new particle location        
     u1=f_u.ev(Pt[:,0],Pt[:,1])
     u2=f_v.ev(Pt[:,0],Pt[:,1])
@@ -148,8 +148,8 @@ def Particle_Tracking(Pt,U,V,x,res,dx,L,dt,Diff,alpha,beta):
     Pt[:,0]=pos_adjust_v(x1_pr,L)
     Pt[:,1]=pos_adjust_v(x2_pr,L)
         
-    endtime = time.process_time()
-    print(endtime - starttime)
+#    endtime = time.process_time()
+#    print(endtime - starttime)
     
     
     return Pt, dMSD 
