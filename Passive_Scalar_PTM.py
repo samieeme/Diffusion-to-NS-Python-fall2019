@@ -86,10 +86,11 @@ sz_frc = ndx_frc.shape[0]
 #%%#################### Generating Initial Conditions #########################
 
 icpath = os.path.join(os.getcwd(),'Out_IC')
+icvelpath = os.path.join(icpath,'N'+Nnod_in+'_nu'+visc_in)
 
-Uhat = np.genfromtxt(os.path.join(icpath,'Uhat.csv'), 
+Uhat = np.genfromtxt(os.path.join(icvelpath,'Uhat.csv'), 
                      delimiter=',', dtype=complex)
-Vhat = np.genfromtxt(os.path.join(icpath,'Vhat.csv'),
+Vhat = np.genfromtxt(os.path.join(icvelpath,'Vhat.csv'),
                      delimiter=',', dtype=complex)
 phihat = np.genfromtxt(os.path.join(icpath,'Phihat_'+str(Ks)+'.csv'), 
                        delimiter=',', dtype=complex)
@@ -98,7 +99,7 @@ Uhat *= c_off
 Vhat *= c_off
 
     
-pth = 'PTM_'+Npcell_in+'_Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in
+pth = 'PTM_'+Npcell_in+'_Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in+'_N'+Nnod_in+'_nu'+visc_in
 dirpath = os.path.join(os.getcwd(), pth)
 os.mkdir(dirpath)
 os.chdir(dirpath)
