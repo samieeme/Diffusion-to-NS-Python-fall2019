@@ -68,11 +68,11 @@ K_sh,K_sh2,K_sh4 = get_sphere_waven(Nnod)
 
 Ntmax = int(t_end/dt)
 out_freq = int(t_out_freq/dt)
-iprnt_freq = int(out_freq/5.)
+iprnt_freq = int(out_freq)
 
 out = np.linspace(0,Ntmax,int(Ntmax/out_freq)+1,dtype=int)
 
-Wmax = Nnod*(2**0.5)/3.0
+Wmax = Nnod*cut_off
 
 tmp = np.nonzero(K_sh <= Kf)
 ndx_frc = np.array([tmp[0][1::],tmp[1][1::]]).T
@@ -80,7 +80,7 @@ sz_frc = ndx_frc.shape[0]
 
 #%%#################### Generating Initial Conditions #########################
 
-icpath = os.path.join(os.getcwd(),'Out_IC')
+icpath = os.path.join(os.getcwd(),'Out_IC/N'+Nnod_in+'_nu'+visc_in)
 Uhat = np.genfromtxt(icpath+'/'+'Uhat.csv', delimiter=',', dtype=complex)
 Vhat = np.genfromtxt(icpath+'/'+'Vhat.csv', delimiter=',', dtype=complex)
 phihat = np.genfromtxt(icpath+'/'+'Phihat_'+str(Ks)+'.csv', delimiter=',', 
@@ -90,7 +90,7 @@ Uhat *= c_off
 Vhat *= c_off
 #phihat *= c_off
     
-pth = 'Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in
+pth = 'Ks_'+Ks_in+'_alpha_'+alpha_in+'_Sc_'+schm_in+'_nu_'+visc_in+'_N_'+Nnod_in
 dirpath = os.path.join(os.getcwd(), pth)
 os.mkdir(dirpath)
 os.chdir(dirpath)
